@@ -64,10 +64,10 @@ def get_sensor_csv(dir_path, acc, filename_contains = ""):
             if p.endswith('.csv') and filename_contains in p:
                 acc.append(dir_path + p)
         else:
-            get_sensor_csv(dir_path + p, acc)
+            acc.append([])
+            get_sensor_csv(dir_path + p, acc[-1], filename_contains)
 
-def find_correlations(paths, max_corr_time_dist, min_corr_coeff, keep_loaded):
-    desired_corr_list = []
+def find_correlations(paths, desired_corr_list, max_corr_time_dist, min_corr_coeff, keep_loaded):
     measurements_j = get_measurements(paths[0], keep_loaded)
     for i in range(len(paths) - 1):
         measurements_i = measurements_j
@@ -96,18 +96,19 @@ def find_correlations(paths, max_corr_time_dist, min_corr_coeff, keep_loaded):
                 print("############## IMPORTANT ###############")
                 desired_corr_list.append((corr_coeff, paths[i], paths[j]))
             print("Correlation based on", len(datasets[0]), "corr_coeff =: ", corr_coeff)
-    return desired_corr_list
 
 if __name__ == "__main__":
     dl.split_into_attr_tree("IoT_and_predictive_maintenance-full.csv", DATA_TREE_PATH, ["machine_name", "sensor_type"])
     apaths, vpaths = [], []
     get_sensor_csv(DATA_TREE_PATH, apaths, "a_max")
-    interesting_correlations = find_correlations(apaths, 3, 0.7, True)
+    interesting_correlations = []
+    for machine_paths in apaths:
+        find_correlations(machine_paths, interesting_correlations, 3, 0.7, True)
     with open("corr.csv", 'w') as corr_file:
         corr_file.write('"corr_coeff";"path1";"path2"\n')
         for corr_coeff, path1, path2 in sorted(interesting_correlations):
             print(corr_coeff, path1, path2)
-            corr_file.write('"' + str(corr_coeff) + '"' + ';' + '"' + path1 + '"' + ';' + '"' + path2 + '"\n')
+            corr_file.write(str(corr_coeff) + ';' + '"' + path1 + '"' + ';' + '"' + path2 + '"\n')
     # randomize_blocks('data/FL01/drive_gear_a_max.csv')
     # dodati loadanje i spremanje poretka u file i iz njega (npr randomize provoditi samo na onima
 
