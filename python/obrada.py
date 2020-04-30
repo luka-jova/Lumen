@@ -1,8 +1,12 @@
 import dataset_loader as dl
 import measurement as ms
 from random import shuffle
+import numpy as np
+import os, os.path
+from scipy import stats
 
 MAX_DIFF = 30
+DATA_TREE_PATH = "data"
 
 # max_diff is maximum distance between starting time of
 # two measurements that can be in the same batch (in seconds)
@@ -34,9 +38,76 @@ def randomize_blocks(path):
     shuffle(shared_data[path])
 
 shared_data = {}
+path_measurements_map = {}
+
+def get_measurements(path, keep_loaded):
+    if path in path_measurements_map:
+        if keep_loaded:
+            return path_measurements_map[path]
+        else:
+            return path_measurements_map.pop(path)
+    else:
+        if keep_loaded:
+            path_measurements_map[path] = []
+            dl.load_measurements(path, path_measurements_map[path])
+            return path_measurements_map[path]
+        else:
+            temp = []
+            dl.load_measurements(path, temp)
+            return temp
+
+def get_sensor_csv(dir_path, acc, filename_contains = ""):
+    if not dir_path.endswith('/'): dir_path += '/'
+    files = os.listdir(dir_path)
+    for p in files:
+        if os.path.isfile(dir_path + p):
+            if p.endswith('.csv') and filename_contains in p:
+                acc.append(dir_path + p)
+        else:
+            get_sensor_csv(dir_path + p, acc)
+
+def find_correlations(paths, max_corr_time_dist, min_corr_coeff, keep_loaded):
+    desired_corr_list = []
+    measurements_j = get_measurements(paths[0], keep_loaded)
+    for i in range(len(paths) - 1):
+        measurements_i = measurements_j
+        for j in range(len(paths) - 1, i, -1):
+            measurements_j = get_measurements(paths[j], keep_loaded)
+            print("Correlating", paths[i], "and", paths[j])
+            datasets = [[], []]
+            k, l = 0, 0
+            while k < len(measurements_i) and l < len(measurements_j):
+                dist = measurements_i[k].end_timestamp - measurements_j[l].end_timestamp
+                if abs(dist) < max_corr_time_dist:
+                    datasets[0].append(measurements_i[k].realvalue)
+                    datasets[1].append(measurements_j[l].realvalue)
+                    k += 1
+                    l += 1
+                elif dist < 0:
+                    k += 1
+                else:
+                    l += 1
+            if len(datasets[0]) < 3:
+                print("Not enough data to correlate")
+                continue
+
+            corr_coeff, pvalue = stats.pearsonr(*datasets)
+            if min_corr_coeff < abs(corr_coeff):
+                print("############## IMPORTANT ###############")
+                desired_corr_list.append((corr_coeff, paths[i], paths[j]))
+            print("Correlation based on", len(datasets[0]), "corr_coeff =: ", corr_coeff)
+    return desired_corr_list
 
 if __name__ == "__main__":
-    dl.split_into_attr_tree("IoT_and_predictive_maintenance-full.csv", "data", ["machine_name", "sensor_type"])
-    randomize_blocks('data/FL01/drive_gear_a_max.csv')
+    dl.split_into_attr_tree("IoT_and_predictive_maintenance-full.csv", DATA_TREE_PATH, ["machine_name", "sensor_type"])
+    apaths, vpaths = [], []
+    get_sensor_csv(DATA_TREE_PATH, apaths, "a_max")
+    interesting_correlations = find_correlations(apaths, 3, 0.7, True)
+    with open("corr.csv", 'w') as corr_file:
+        corr_file.write('"corr_coeff";"path1";"path2"\n')
+        for corr_coeff, path1, path2 in sorted(interesting_correlations):
+            print(corr_coeff, path1, path2)
+            corr_file.write('"' + str(corr_coeff) + '"' + ';' + '"' + path1 + '"' + ';' + '"' + path2 + '"\n')
+    # randomize_blocks('data/FL01/drive_gear_a_max.csv')
     # dodati loadanje i spremanje poretka u file i iz njega (npr randomize provoditi samo na onima
 
