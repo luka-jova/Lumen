@@ -113,6 +113,7 @@ def split_into_attr_tree(src_path, dest_dir_path, attributes, force_rewrite = Fa
         split_into_attr_tree(dest_dir_path + f, dest_dir_path + f[:f.rfind('.csv')], attributes[1:], force_rewrite, True)
 
 def load_measurements(src_path, dest_list, predicate = lambda m: True):
+    # print("Loading from", src_path)
     with open(src_path) as dat:
         for ln in dat:
             if Measurement.CSV_HEADER in ln: continue
@@ -122,6 +123,7 @@ def load_measurements(src_path, dest_list, predicate = lambda m: True):
                     dest_list.append(m)
             except Exception as e:
                 print(e)
+    # print("Loaded successfully")
 
 def store_measurements(src_list, dest_path, add_header = True):
     with open(dest_path, 'w') as dest_file:

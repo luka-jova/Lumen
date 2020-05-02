@@ -2,15 +2,12 @@ import dataset_loader as dl
 import measurement as ms
 from random import shuffle
 import generate_output as go
+import numpy as np
+import os, os.path
+from scipy import stats
 
-list_V_sensors = [
-	"drive_gear_V_eff",
-	"drive_motor_V_eff",
-	"drive_wheel_V_eff",
-	"idle_wheel_V_eff",
-	"lifting_gear_V_eff",
-	"lifting_motor_V_eff"
-]
+MAX_DIFF = 30
+DATA_TREE_PATH = "data"
 
 list_a_sensors = [
 	"drive_gear_a_max",
@@ -133,10 +130,80 @@ def export_data_for_machine(machine_name):
 	export_to_csv(machine_name, "-all-sensors", output_data)
 	
 shared_data = {}
+path_measurements_map = {}
+
+def get_measurements(path, keep_loaded):
+    if path in path_measurements_map:
+        if keep_loaded:
+            return path_measurements_map[path]
+        else:
+            return path_measurements_map.pop(path)
+    else:
+        if keep_loaded:
+            path_measurements_map[path] = []
+            dl.load_measurements(path, path_measurements_map[path])
+            return path_measurements_map[path]
+        else:
+            temp = []
+            dl.load_measurements(path, temp)
+            return temp
+
+def get_sensor_csv(dir_path, acc, filename_contains = ""):
+    if not dir_path.endswith('/'): dir_path += '/'
+    files = os.listdir(dir_path)
+    for p in files:
+        if os.path.isfile(dir_path + p):
+            if p.endswith('.csv') and filename_contains in p:
+                acc.append(dir_path + p)
+        else:
+            acc.append([])
+            get_sensor_csv(dir_path + p, acc[-1], filename_contains)
+
+def find_correlations(paths, desired_corr_list, max_corr_time_dist, min_corr_coeff, keep_loaded):
+    measurements_j = get_measurements(paths[0], keep_loaded)
+    for i in range(len(paths) - 1):
+        measurements_i = measurements_j
+        for j in range(len(paths) - 1, i, -1):
+            measurements_j = get_measurements(paths[j], keep_loaded)
+            print("Correlating", paths[i], "and", paths[j])
+            datasets = [[], []]
+            k, l = 0, 0
+            while k < len(measurements_i) and l < len(measurements_j):
+                dist = measurements_i[k].end_timestamp - measurements_j[l].end_timestamp
+                if abs(dist) < max_corr_time_dist:
+                    datasets[0].append(measurements_i[k].realvalue)
+                    datasets[1].append(measurements_j[l].realvalue)
+                    k += 1
+                    l += 1
+                elif dist < 0:
+                    k += 1
+                else:
+                    l += 1
+            if len(datasets[0]) < 3:
+                print("Not enough data to correlate")
+                continue
+
+            corr_coeff, pvalue = stats.pearsonr(*datasets)
+            if min_corr_coeff < abs(corr_coeff):
+                print("############## IMPORTANT ###############")
+                desired_corr_list.append((corr_coeff, paths[i], paths[j]))
+            print("Correlation based on", len(datasets[0]), "corr_coeff =: ", corr_coeff)
 
 if __name__ == "__main__":
 	load_machine("FL01")
   #dl.split_into_attr_tree("data-full.csv", "data", ["machine_name", "sensor_type"])
   #randomize_blocks('data/FL01/drive_gear_a_max.csv')
   # dodati loadanje i spremanje poretka u file i iz njega (npr randomize provoditi samo na onima
-
+    dl.split_into_attr_tree("IoT_and_predictive_maintenance-full.csv", DATA_TREE_PATH, ["machine_name", "sensor_type"])
+    apaths, vpaths = [], []
+    get_sensor_csv(DATA_TREE_PATH, apaths, "a_max")
+    interesting_correlations = []
+    for machine_paths in apaths:
+        find_correlations(machine_paths, interesting_correlations, 3, 0.7, True)
+    with open("corr.csv", 'w') as corr_file:
+        corr_file.write('"corr_coeff";"path1";"path2"\n')
+        for corr_coeff, path1, path2 in sorted(interesting_correlations):
+            print(corr_coeff, path1, path2)
+            corr_file.write(str(corr_coeff) + ';' + '"' + path1 + '"' + ';' + '"' + path2 + '"\n')
+    # randomize_blocks('data/FL01/drive_gear_a_max.csv')
+    # dodati loadanje i spremanje poretka u file i iz njega (npr randomize provoditi samo na onima
