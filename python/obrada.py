@@ -3,22 +3,41 @@ import measurement as ms
 from random import shuffle
 import generate_output as go
 
-MAX_DIFF = 60
-
-list_eff_sensors = [
+list_V_sensors = [
 	"drive_gear_V_eff",
 	"drive_motor_V_eff",
 	"drive_wheel_V_eff",
 	"idle_wheel_V_eff",
 	"lifting_gear_V_eff",
-	"lifting_motor_V_eff",
-]	
+	"lifting_motor_V_eff"
+]
+
+list_a_sensors = [
+	"drive_gear_a_max",
+	"drive_motor_a_max",
+	"drive_wheel_a_max",
+	"idle_wheel_a_max",
+	"lifting_gear_a_max",
+	"lifting_motor_a_max"
+]
 
 list_debug_sensors = [
 	"drive_gear_V_eff",
 	"drive_wheel_V_eff"
 ]
 
+list_sensors = {
+	"FL01": list_V_sensors + list_a_sensors,
+	"FL02": list_V_sensors + list_a_sensors,
+	"FL03": list_V_sensors + list_a_sensors,
+	"FL04": list_V_sensors + list_a_sensors,
+	"FL05": list_V_sensors + list_a_sensors,
+	"FL06": list_V_sensors + list_a_sensors,
+	"FL07": list_V_sensors + list_a_sensors,
+	"debug-machine": list_debug_sensors			
+}
+
+MAX_DIFF = 60
 # max_diff is maximum distance between starting time of
 # two measurements that can be in the same batch (in seconds)
 def separate_by_time(measurements_list, max_diff = MAX_DIFF):
@@ -68,7 +87,7 @@ sensor_data = {}
 
 #load all eff_sensors for machine_name
 def load_machine(machine_name):
-	for cur_sensor in list_eff_sensors:
+	for cur_sensor in list_sensors[ machine_name ]:
 		load_sensor(machine_name, cur_sensor)
 		
 #load sensor_name for machine_name in sensor_data
@@ -107,11 +126,8 @@ def export_data_for_machine(machine_name):
 	
 	output_data = []
 	
-	if machine_name == "debug-machine":
-		print("Ignored timeblocks:", go.generate_output_data(sensor_data, list_debug_sensors, output_data))
-	else:
-		print("Ignored timeblocks:", go.generate_output_data(sensor_data, list_eff_sensors, output_data))
-	#generate_output now has output_data loaded
+	print("Ignored timeblocks:", go.generate_output_data(sensor_data, list_sensors[ machine_name ], output_data))
+	#generate_output has loaded the list output_data
 	
 	print("Timeblocks loaded:", len(output_data))
 	export_to_csv(machine_name, "-all-sensors", output_data)
@@ -120,7 +136,6 @@ shared_data = {}
 
 if __name__ == "__main__":
 	load_machine("FL01")
-	#check_time_compatibility("FL01", list_eff_sensors)
   #dl.split_into_attr_tree("data-full.csv", "data", ["machine_name", "sensor_type"])
   #randomize_blocks('data/FL01/drive_gear_a_max.csv')
   # dodati loadanje i spremanje poretka u file i iz njega (npr randomize provoditi samo na onima
