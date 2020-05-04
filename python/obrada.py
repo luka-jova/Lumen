@@ -201,6 +201,7 @@ def find_correlations(paths, desired_corr_list, max_corr_time_dist, min_corr_coe
 
 if __name__ == "__main__":
 	load_machine("FL01")
+	#proba
   #dl.split_into_attr_tree("data-full.csv", "data", ["machine_name", "sensor_type"])
   #randomize_blocks('data/FL01/drive_gear_a_max.csv')
   # dodati loadanje i spremanje poretka u file i iz njega (npr randomize provoditi samo na onima
