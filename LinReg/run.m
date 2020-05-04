@@ -1,4 +1,5 @@
 %run function is the main function
+%filename is a .csv file to load data of sensors
 %prediction_in is a row vector representing the indexes of sensors that should be used for prediction
 %prediction_out is a scalar representing the sensor being predicted
 function run(filename, prediction_in, prediction_out)
@@ -43,10 +44,15 @@ function run(filename, prediction_in, prediction_out)
 	figure; hold on;
 	plot(X_CVS, y_CVS, 'xb');
 	plot(X_CVS, y_CVS_pred, '.r', 'markersize', 10);
-	xlabel("input sensor values");
-	ylabel("output sensor values");
+	xlabel(strcat("input sensor values:", mat2str(prediction_in)));
+	ylabel(strcat("output sensor values:", num2str(prediction_out)));
 	title("Cross validation set");
-	
+	image_out = strcat("img_predict_", num2str(prediction_out), "_w_");
+	for i=prediction_in
+		image_out = strcat(image_out, num2str(i));
+	endfor
+	image_out = strcat(image_out, ".png");
+	print(image_out, "-dpng")
 end
 
 %example: run("FL01-all-sensors.csv", [1 3 4], 5)
