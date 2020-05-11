@@ -5,6 +5,15 @@ plt.style.use('ggplot')
 plt.close('all')
 import obrada
 
+'''
+    !!!
+    User functions:
+    Plot(machine, sensor) - plots machine with x-axis being start_timestamp
+    Plot_rolling_mean(machine, sensor, window) - same but adds rolling mean
+    Plot2d(matrix, xmin, xmax, ymin, ymax) - plots points
+                    ....................
+                         optional
+'''
 manual_repair = {
     "FL01" : [
         '2018-11-13 0:0:0.0',
