@@ -1,12 +1,14 @@
 import numpy as np
 import pandas as pd #needed for debugging input
 
-#estimateGaussian Estimates parameters of a Gausssian distribution for the dataset X
-#input arguments:
-	#X - n.o.examples * n.o.features -> dataset
-#output:
-	#mu - row vector - 1 * n.o. features -> contains mean value for each feature
-	#sigma2 - row vector - 1 * n.o. features -> contains variance (std. deviation squared) for each feature
+'''
+	estimateGaussian Estimates parameters of a Gausssian distribution for the dataset X
+	input arguments:
+		X - n.o.examples * n.o.features -> dataset
+	output:
+		mu - row vector - 1 * n.o. features -> contains mean value for each feature
+		sigma2 - row vector - 1 * n.o. features -> contains variance (std. deviation squared) for each feature
+'''
 def estimateGaussian(X):
 	m, n = X.shape
 		
@@ -15,27 +17,31 @@ def estimateGaussian(X):
 	
 	return mu, sigma2
 
-#estimateMultivariateGaussian - Estimate parameters of a Multivariate Gaussian distribution for the dataset X
-#input arguments:
+'''
+estimateMultivariateGaussian - Estimate parameters of a Multivariate Gaussian distribution for the dataset X
+input arguments:
 	#X - n.o.examples * n.o.features -> dataset
-#output:
-	#mu - row vector - 1*n.o.features -> mean value for each feature
-	#Sigma2 - n.o.features * n.o.features -> Covariance matrix
+output:
+	mu - row vector - 1*n.o.features -> mean value for each feature
+	Sigma2 - n.o.features * n.o.features -> Covariance matrix
+'''
 def estimateMultivariateGaussian(X):
 	m, n = X.shape
 	mu = np.sum(X, 0) / m
 	Sigma2 = 1/m * X.T @ X
 	return mu, Sigma2
-
-#multivariateGaussian - Calculate probability density function for examples in dataset X, 
-#given parameters of expected normal distribution
-#input:
-	#X - n.o.examples * n.o.features
-	#mu - row vector - 1*n.o.features
-	#if Sigma2 is a row vector -> univariate Gaussian (Probability density function is parallel to axes) <=> Covariance matrix is diagonal
-	#if Sigma2 is a matrix -> it is a Covariance matrix (n.o.features * n.o.features)
-#output:
-	#p - row vector representing probability for the i-th example to be in the Normal Distribution with given parameters 
+	
+'''
+multivariateGaussian - Calculate probability density function for examples in dataset X, 
+given parameters of expected normal distribution
+input:
+	X - n.o.examples * n.o.features
+	mu - row vector - 1*n.o.features
+	if Sigma2 is a row vector -> univariate Gaussian (Probability density function is parallel to axes) <=> Covariance matrix is diagonal
+	if Sigma2 is a matrix -> it is a Covariance matrix (n.o.features * n.o.features)
+output:
+	p - row vector representing probability for the i-th example to be in the Normal Distribution with given parameters 
+'''
 def multivariateGaussian(X, mu, Sigma2):
 	m, n = X.shape
 	
@@ -46,12 +52,14 @@ def multivariateGaussian(X, mu, Sigma2):
 	
 	return p
 
-#input:
-	#yval - row vector representing False=standard example, True=outlier (providing CVS - Cross Validation Set)
-	#pval - row vector representing the probability for i-th example in CVS 
-		#that it is standard (low probability means it is probably an outlier)
-#output:
-	#best_eps, best_F1 found eps and F1 price 
+'''
+input:
+	yval - row vector representing False=standard example, True=outlier (providing CVS - Cross Validation Set)
+	pval - row vector representing the probability for i-th example in CVS 
+		that it is standard (low probability means it is probably an outlier)
+output:
+	best_eps, best_F1 found eps and F1 price 
+'''
 def selectThreshold(yval, pval):
 	best_eps = 0
 	best_F1 = 0

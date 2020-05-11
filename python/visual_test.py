@@ -119,7 +119,7 @@ def Distribution(start_date, end_date, machine = 'FL02', sensor = obrada.list_se
 
     data.plot(kind = 'density')
     data.plot(kind = 'hist', bins = 100)
-
+    print()
     plt.show(block = False)
 
 def Close():
@@ -134,14 +134,15 @@ def Show():
     can be called multiple times
     if window is not terminated old points will stay
 '''
-def Plot2d(data, x_min = 0, x_max = 0, y_min = 0, y_max = 0):
+
+def Plot2d(data, x_min = 0, x_max = 0, y_min = 0, y_max = 0, args = ""):
     x = [p[0] for p in data]
     y = [p[1] for p in data]
 
-    plt.plot(x, y, 'ro')
+    plt.plot(x, y, args)
     if x_min != x_max:
         plt.xlim(x_min, x_max)
     if y_min != y_max:
         plt.ylim(y_min, y_max)
 
-    plt.show(block = False)
+    plt.show(block = False)    
