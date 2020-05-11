@@ -24,7 +24,7 @@ manual_repair = {
         '2019-04-02 0:0:0.0'
     ]
 }
-
+# Gets data from data folder
 def Plot_data(machine = 'FL01', sensor = obrada.list_sensors['FL01'][2]):
     print(machine, sensor)
 
@@ -67,13 +67,15 @@ def Plot(machine = 'FL01', sensor = obrada.list_sensors['FL01'][0]):
 
 temp = None
 #ako se nista ne pokaze samo pokreni komandu opet
+# Plot rolling window mean of some machine and sensor
+# Can plot multiple machines / sensors on same graph if called multiple times in a row
 def Plot_rolling_mean(machine = 'FL01', sensor = obrada.list_sensors['FL01'][0], window = '10d'):
 
     data = Plot_data(machine, sensor)
     if len(data) == 0:
         return
 
-    data['mean'] = data['realvalue'].rolling('10d', min_periods = 1).mean()
+    data['mean'] = data['realvalue'].rolling(window, min_periods = 1).mean()
     global temp
     if temp:
         temp = data['mean'].plot(ax = temp)
@@ -96,6 +98,7 @@ def Trim_data(start_date, end_date, data):
     data = data[(start_date < data.index) & (data.index < end_date)]
     return data
 
+# Displays distribution of realvalues in given date range for machine and sensor
 def Distribution(start_date, end_date, machine = 'FL02', sensor = obrada.list_sensors['FL02'][0]):
     data = Trim_data(start_date, end_date, Plot_data(machine, sensor))
     if len(data) == 0:
