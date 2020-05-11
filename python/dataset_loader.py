@@ -42,7 +42,7 @@ def split_by_line_number(src_path, dest_path, number_of_batches, copy_first_line
     Splits a csv file in separate csv files for each different value in selected column
 '''
 def split_by_attr(src_path, dest_path, attr_name, copy_first_line = True):
-    with open(src_path, encoding="utf-8") as dat:
+    with open(src_path, encoding="utf-8-sig") as dat:
         attrs_map = {}
         for i, ln in enumerate(dat):
             if (i == 0):
