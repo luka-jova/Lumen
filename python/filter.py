@@ -167,6 +167,7 @@ class AMSMFilter:
 		if type(self.duration) is tuple:
 			self.ba = 0 # number of accepted blocks with duration tuple's max distance
 			self.pat = -2 * self.duration[1] # previously accepted timestamp
+		if type(self.duration) is float:
 			self.fat = None # first accepted timestamp
 		if self.duration is not None:
 			self.na = 0 # number of accepted measurements
