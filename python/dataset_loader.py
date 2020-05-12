@@ -1,10 +1,8 @@
-# import pandas as pd
 import multiprocessing as mp
 import os.path
 import os
 from shutil import rmtree
 from measurement import Measurement
-# pd.read_csv("IoT_and_predictive_maintenance-full.csv", sep = ';')
 
 
 '''
@@ -113,7 +111,7 @@ def split_into_attr_tree(src_path, dest_dir_path, attributes, force_rewrite = Fa
         split_into_attr_tree(dest_dir_path + f, dest_dir_path + f[:f.rfind('.csv')], attributes[1:], force_rewrite, True)
 
 def load_measurements(src_path, dest_list, predicate = lambda m: True):
-    # print("Loading from", src_path)
+    print("Loading from", src_path)
     with open(src_path) as dat:
         for ln in dat:
             if Measurement.CSV_HEADER in ln: continue
@@ -123,7 +121,7 @@ def load_measurements(src_path, dest_list, predicate = lambda m: True):
                     dest_list.append(m)
             except Exception as e:
                 print(e)
-    # print("Loaded successfully")
+    print(src_path, "loaded successfully")
 
 def store_measurements(src_list, dest_path, add_header = True):
     with open(dest_path, 'w') as dest_file:
@@ -132,10 +130,12 @@ def store_measurements(src_list, dest_path, add_header = True):
         for measurement in src_list:
             dest_file.write(measurement.to_csv() + '\n')
 
+ATTR_TREE_PATH = "data"
+
 if __name__ == "__main__":
     # usage examples:
     # split_by_attr("IoT_and_predictive_maintenance-full.csv", "machine.csv", "machine_name")
     # split_by_line_number("machineFL02.csv", "machine2_batch.csv", 10)
 
-    split_into_attr_tree("IoT_and_predictive_maintenance-full.csv", "data", ["machine_name", "sensor_type"])
+    split_into_attr_tree("IoT_and_predictive_maintenance-full.csv", ATTR_TREE_PATH, ["machine_name", "sensor_type"])
 
