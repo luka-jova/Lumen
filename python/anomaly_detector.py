@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd #needed for debugging input
+import visual_test as vis
 
 '''
 	estimateGaussian Estimates parameters of a Gausssian distribution for the dataset X
@@ -94,7 +95,7 @@ def generate_random_example(m):
 	x_mean = 4; y_mean = -2;
 	x_sd = 5; y_sd = 10
 	X = np.hstack((np.random.normal(x_mean, x_sd, m)[:, None], np.random.normal(y_mean, y_sd, m)[:, None]))
-	fi = np.pi/3
+	fi = np.pi/6
 	rot_mat = np.array([[np.cos(fi), -np.sin(fi)], [np.sin(fi), np.cos(fi)]])
 	X = (rot_mat @ X.T).T
 	return X
@@ -104,10 +105,10 @@ def run_sample():
 	Xcvs = generate_random_example(200)
 	ycvs = np.array([False] * 200)
 
-	Xcvs = np.vstack((Xcvs, np.random.rand(20, 2) * 100))
+	Xcvs = np.vstack((Xcvs, ((np.random.rand(20, 2) - 0.5) * 100) + np.array([4, -2]) ))
 	ycvs = np.hstack((ycvs, np.array([True] * 20)))
 	
-	#plot X
+	vis.Plot2d(X)
 	
 	mu, Sigma2 = estimateMultivariateGaussian(X)
 	
@@ -116,10 +117,13 @@ def run_sample():
 	eps, F1 = selectThreshold(ycvs, pred_cvs)
 	
 	#plot Xcvs, color outliers in light blue
+	print(Xcvs[200:, :])
+	vis.Plot2d(Xcvs[200:, :], args = "xb")
 	print("Best eps: ", eps, "\nF1: ", F1)
 	
 	outliers = Xcvs[ np.where(pred_cvs < eps) ]
 	print("Found", outliers.shape[0], "outliers:")
 	print(outliers)
+	vis.Plot2d(outliers, args = "o")
 	#circle all outliers
 	

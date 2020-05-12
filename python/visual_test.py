@@ -135,11 +135,14 @@ def Show():
 	if window is not terminated old points will stay
 '''
 
-def Plot2d(data, x_min = 0, x_max = 0, y_min = 0, y_max = 0):
-	x = [p[0] for p in data]
-	y = [p[1] for p in data]
 
-	plt.plot(x, y, 'ro')
+def Plot2d(data, x_min = 0, x_max = 0, y_min = 0, y_max = 0, args = 'xk'):
+	x = data[:, 0]
+	y = data[:, 1]
+	if 'o' in args:
+		plt.plot(x, y, args, mfc="none", markersize = 10)
+	else:
+		plt.plot(x, y, args)
 	if x_min != x_max:
 		plt.xlim(x_min, x_max)
 	if y_min != y_max:
