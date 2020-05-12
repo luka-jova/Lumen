@@ -3,3 +3,4 @@
 *.png
 *.zip
 *.txt
+__pycache__
