@@ -10,12 +10,12 @@ MAX_DIFF = 30
 DATA_TREE_PATH = "data"
 
 list_V_sensors = [
-	"drive_gear_a_max",
-	"drive_motor_a_max",
-	"drive_wheel_a_max",
-	"idle_wheel_a_max",
-	"lifting_gear_a_max",
-	"lifting_motor_a_max"
+	"drive_gear_V_eff",
+	"drive_motor_V_eff",
+	"drive_wheel_V_eff",
+	"idle_wheel_V_eff",
+	"lifting_gear_V_eff",
+	"lifting_motor_V_eff"
 ]
 
 
