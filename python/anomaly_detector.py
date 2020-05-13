@@ -1,5 +1,4 @@
 import numpy as np
-import pandas as pd #needed for debugging input
 import visual_test as vis
 
 '''
@@ -83,14 +82,6 @@ def selectThreshold(yval, pval):
 	return best_eps, best_F1
 	
 #OTHER FUNCTIONS
-
-def load_data(filename):
-	df = pd.read_csv(filename)
-	X = []
-	for i in df.index: 
-		X.append( [ float(df[ 'X' ][ i ]), float(df[ 'Y' ][ i ]) ] )
-	return np.array(X)
-
 def generate_random_example(m):
 	x_mean = 4; y_mean = -2;
 	x_sd = 5; y_sd = 10
@@ -99,7 +90,7 @@ def generate_random_example(m):
 	rot_mat = np.array([[np.cos(fi), -np.sin(fi)], [np.sin(fi), np.cos(fi)]])
 	X = (rot_mat @ X.T).T
 	return X
-	
+
 def run_sample():
 	X = generate_random_example(1000)
 	Xcvs = generate_random_example(200)

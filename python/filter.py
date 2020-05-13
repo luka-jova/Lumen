@@ -219,4 +219,30 @@ def measurements_to_numpy_vector(src_list):
 	numpy.ndarray
 	"""
 	return np.array([it.realvalue for it in src_list])
+	
+manual_repairs = {
+	"FL01" : [
+		'2018-11-13 0:0:0.0',
+		'2019-02-08 0:0:0.0',
+		'2018-02-12 0:0:0.0',
+	],
+	"FL02" : [
+		'2019-04-02 0:0:0.0'
+	],
+	"FL03" : [
+		'2019-04-02 0:0:0.0'
+	],
+	"FL04" : [],
+	"FL05" : [],
+	"FL06" : [],
+	"FL07" : [
+		'2019-04-02 0:0:0.0'
+	],
+	"debug-machine" :  [
+		'2019-04-02 0:0:0.0'
+	]
+}
+
+def getRepairs(machine_name):
+	return manual_repairs[ machine_name ]
 

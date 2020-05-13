@@ -4,6 +4,13 @@ import matplotlib.pyplot as plt
 plt.style.use('ggplot')
 plt.close('all')
 import obrada
+import matplotlib
+
+RECOMMENDED_MATPLOTLIB_BACKEND = "TkAgg"
+if matplotlib.get_backend() != RECOMMENDED_MATPLOTLIB_BACKEND:
+	print("Setting up backend to TkAgg")
+	matplotlib.use(RECOMMENDED_MATPLOTLIB_BACKEND)
+
 
 '''
 	!!!
@@ -149,3 +156,4 @@ def Plot2d(data, x_min = 0, x_max = 0, y_min = 0, y_max = 0, args = 'xk'):
 		plt.ylim(y_min, y_max)
 
 	plt.show(block = False)
+
