@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 plt.style.use('ggplot')
 plt.close('all')
 import obrada
+from measurement import Measurement as M
 import matplotlib
 
 RECOMMENDED_MATPLOTLIB_BACKEND = "TkAgg"
@@ -41,6 +42,46 @@ manual_repair = {
 	]
 }
 # Gets data from data folder
+
+def Convert_dates(L):
+	res = pd.DataFrame(columns = ('timestamp', 'value'))
+
+	data = []
+	for m in L:
+		row = {}
+		row['timestamp'] = m.start_timestamp
+		row['value'] = m.realvalue
+		data.append(row)
+
+	data = pd.DataFrame(data)
+	print(data)
+	#data.timestamp = pd.to_datetime(data['timestamp'], format='%Y-%m-%d %H:%M:%S.%f')
+	data.set_index(['timestamp'], inplace = True)
+	return data
+
+# list of Measurment objects
+def PlotTime(L):
+	data = Convert_dates(L)
+	data.plot()
+
+	plt.show(block = False)
+
+# list of numbers
+def PlotHisto(L, number_of_columns = 50):
+	data = pd.DataFrame(columns = ['realvalue'])
+
+	data = []
+	for x in L:
+		row = {}
+		row['realvalue'] = x
+		data.append(row)
+	data = pd.DataFrame(data)
+
+	data.plot(kind = 'hist', bins = number_of_columns)
+	data.plot(kind = 'density')
+
+	plt.show(block = False)
+
 def Plot_data(machine = 'FL01', sensor = obrada.list_sensors['FL01'][2]):
 	print(machine, sensor)
 
@@ -67,13 +108,34 @@ def Plot_data(machine = 'FL01', sensor = obrada.list_sensors['FL01'][2]):
 
 	return data
 
-def Plot(machine = 'FL01', sensor = obrada.list_sensors['FL01'][0]):
+def PlotSensor(machine = 'FL01', sensor = obrada.list_sensors['FL01'][0]):
 
 	data = Plot_data(machine, sensor)
 	if len(data) == 0:
 		return
 
 	data.plot()
+
+	for when in manual_repair[machine]:
+		plt.axvline(x = when, color = '0.2', ls = '--')
+
+	plt.legend(['realvalue', 'manual_repair'])
+	plt.show(block = False)
+
+def PlotMachine(machine = 'FL01'):
+
+	all_sensors = []
+	try:
+		all_sensors = obrada.list_sensors['machine']
+	except:
+		print('Cannot find machine')
+		return
+
+	data = {}
+	for sensor in all_sensors:
+		data[senor] = Plot_data(machine, sensor)
+
+	ax = None
 
 	for when in manual_repair[machine]:
 		plt.axvline(x = when, color = '0.2', ls = '--')
