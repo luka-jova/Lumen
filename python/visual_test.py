@@ -1,20 +1,11 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-plt.style.use('ggplot')
-plt.close('all')
+from datetime import datetime
 import obrada
+import data_filter
 from measurement import Measurement as M
 
-'''
-	!!!
-	User functions:
-	Plot(machine, sensor) - plots machine with x-axis being start_timestamp
-	Plot_rolling_mean(machine, sensor, window) - same but adds rolling mean
-	Plot2d(matrix, xmin, xmax, ymin, ymax) - plots points
-					....................
-						 optional
-'''
 manual_repair = {
 	"FL01" : [
 		'2018-11-13 0:0:0.0',
@@ -36,28 +27,49 @@ manual_repair = {
 }
 # Gets data from data folder
 
-def Convert_dates(L):
+def RollingMean(data, window = '10d'):
+	orig = data.columns[0]
+	feat = orig + ' - rolling mean'
+	data[feat] = data[orig].rolling(window).mean()
+	data.drop(columns = orig, inplace = True)
+
+def RollingSkweness(data, window = '10d'):
+	orig = data.columns[0]
+	feat = orig + ' - rolling skew'
+	data[feat] = data[orig].rolling(window).skew()
+	data.drop(columns = orig, inplace = True)
+
+def RollingStandardDeviation(data, window = '10d'):
+	orig = data.columns[0]
+	feat = orig + ' - rolling std'
+	data[feat] = data[orig].rolling(window).std()
+	data.drop(columns = orig, inplace = True)
+
+features = {
+	'basic'    : lambda x, y: None,
+	'rol-mean' : RollingMean,
+	'rol-skew' : RollingSkweness,
+	'rol-std'  : RollingStandardDeviation
+}
+
+def ApplyFeature(data, feature, window):
+	features[feature](data, window)
+
+def Convert_dates(L, y = 'unknown'):
 	res = pd.DataFrame(columns = ('timestamp', 'value'))
 
 	data = []
 	for m in L:
 		row = {}
-		row['timestamp'] = m.start_timestamp
-		row['value'] = m.realvalue
+		row['timestamp'] = m['start_timestamp'].strip('"')
+		row[y] = m.realvalue
 		data.append(row)
 
 	data = pd.DataFrame(data)
-	print(data)
-	#data.timestamp = pd.to_datetime(data['timestamp'], format='%Y-%m-%d %H:%M:%S.%f')
+	data.timestamp = pd.to_datetime(data['timestamp'], format='%Y-%m-%d %H:%M:%S.%f')
 	data.set_index(['timestamp'], inplace = True)
+
 	return data
-
-# list of Measurment objects
-def PlotTime(L):
-	data = Convert_dates(L)
-	data.plot()
-
-	plt.show(block = False)
 
 # list of numbers
 def PlotHisto(L, number_of_columns = 50):
@@ -137,10 +149,11 @@ def PlotMachine(machine = 'FL01'):
 	plt.show(block = False)
 
 temp = None
-#ako se nista ne pokaze samo pokreni komandu opet
-# Plot rolling window mean of some machine and sensor
-# Can plot multiple machines / sensors on same graph if called multiple times in a row
-def Plot_rolling_mean(machine = 'FL01', sensor = obrada.list_sensors['FL01'][0], window = '10d'):
+
+# data is list of Measurment-s
+def Plot_feature(*, data = [], machine = 'FL01', senors = []):
+	if len(data):
+		PlotTime(data)
 
 	data = Plot_data(machine, sensor)
 	if len(data) == 0:
@@ -160,42 +173,49 @@ def Plot_rolling_mean(machine = 'FL01', sensor = obrada.list_sensors['FL01'][0],
 	plt.show(block = False)
 
 '''
-	date format in '%Y-%m-%d %H:%M:%S.%f'
-	example:
-	"2017-11-30" or
-	"2019-10-25 23:02:03.5"
-'''
-def Trim_data(start_date, end_date, data):
-	data = data[(start_date < data.index) & (data.index < end_date)]
-	return data
+Plots realvalue data in correspondance to time
 
-# Displays distribution of realvalues in given date range for machine and sensor
-def Distribution(start_date, end_date, machine = 'FL02', sensor = obrada.list_sensors['FL02'][0]):
-	data = Trim_data(start_date, end_date, Plot_data(machine, sensor))
-	if len(data) == 0:
-		return
-
-	# odjebi datume
-	data.sort_values(by = ['realvalue'], inplace = True)
-	data.reset_index(drop = True, inplace = True)
-
-	data.plot(kind = 'density')
-	data.plot(kind = 'hist', bins = 100)
-
-	plt.show(block = False)
-
-def Close():
-	plt.close('all')
-
-def Show():
-	plt.show(block = False)
+examples
+PlotTime(machine = 'FL02')
+L := list of meausurement
+PlotTime(data = L)
+PlotTime(machine = 'FL03', sensors = ['lifting_motor_a_max','lifting_motor_V_eff'], feature = 'rol-mean')
 
 '''
-	plots list of 2d points
-	ex. data = [[1, 2], [3, 1], [2, 1]]
-	can be called multiple times
-	if window is not terminated old points will stay
-'''
+
+
+def PlotTime(*, data = [], machine = 'FL01', sensors = [], figure = None, kind = None, frmt = None, name = 'unknown', feature = 'basic', window = '10d'):
+	to_plot = []
+
+	if not len(data):
+		if not len(sensors):
+			for sensor in obrada.list_sensors[machine]:
+				sensors.append(sensor)
+		print('Plotting sensors...')
+		for sensor in sensors:
+			temp = []
+			data_filter.filtered_data(temp, machine, sensor)
+			temp = Convert_dates(temp, f'{machine} - {sensor}')
+			print(f'{machine} - {sensor}')
+			to_plot.append(temp)
+	else:
+		print('Plotting data...')
+		to_plot.append(Convert_dates(data, name, feature))
+
+	args = {k: v for k, v in {
+		'ax' : M.get_ax(figure),
+		'kind' : kind,
+		'frmt' : frmt
+	}.items() if v is not None}
+
+	for df in to_plot:
+		ApplyFeature(df, feature, window)
+		ax = df.plot(**args)
+		args['ax'] = ax
+
+	M.refresh()
+	print('Finished')
+
 def Plot2d(data, x_min = 0, x_max = 0, y_min = 0, y_max = 0):
 	x = [p[0] for p in data]
 	y = [p[1] for p in data]
@@ -207,3 +227,15 @@ def Plot2d(data, x_min = 0, x_max = 0, y_min = 0, y_max = 0):
 		plt.ylim(y_min, y_max)
 
 	plt.show(block = False)
+
+class Manager:
+	def __init__(self):
+		plt.close('all')
+	def get_ax(self, fig):
+		if fig not in plt.get_fignums():
+			return None
+		return plt.figure(fig).get_axes()[0]
+	def refresh(self):
+		plt.show(block = False)
+
+M = Manager()
