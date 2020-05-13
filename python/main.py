@@ -63,8 +63,8 @@ def estimate(start_train = 0, duration_train = None, end_train = inf, start_outl
 	print("Best epsilon:", epsilon, "\nGives F1:", F1)
 	
 	#circle all found outliers
-	cvs_outlier_cnt = sum(p_cvs_all[M_cvs_good:] < epsilon)
-	cvs_good_cnt = sum(p_cvs_all[0:M_cvs_good] >= epsilon)
+	cvs_outlier_cnt = sum(p_cvs_all[M_cvs_good:] < epsilon) #found outliers out of all outliers
+	cvs_good_cnt = sum(p_cvs_all[0:M_cvs_good] >= epsilon) #found good measures out of all good measures
 	print("Out of all outliers, we predicted ", cvs_outlier_cnt, "/", M_cvs_outlier, " to be outlier", sep="")
 	print("Out of all good measurements, we predicted ", cvs_good_cnt, "/", M_cvs_good, " to be good", sep = "")	
 	
