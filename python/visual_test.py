@@ -5,6 +5,13 @@ plt.style.use('ggplot')
 plt.close('all')
 import obrada
 from measurement import Measurement as M
+import matplotlib
+
+RECOMMENDED_MATPLOTLIB_BACKEND = "TkAgg"
+if matplotlib.get_backend() != RECOMMENDED_MATPLOTLIB_BACKEND:
+	print("Setting up backend to TkAgg")
+	matplotlib.use(RECOMMENDED_MATPLOTLIB_BACKEND)
+
 
 '''
 	!!!
@@ -196,14 +203,19 @@ def Show():
 	can be called multiple times
 	if window is not terminated old points will stay
 '''
-def Plot2d(data, x_min = 0, x_max = 0, y_min = 0, y_max = 0):
-	x = [p[0] for p in data]
-	y = [p[1] for p in data]
 
-	plt.plot(x, y, 'ro')
+
+def Plot2d(data, x_min = 0, x_max = 0, y_min = 0, y_max = 0, args = 'xk'):
+	x = data[:, 0]
+	y = data[:, 1]
+	if 'o' in args:
+		plt.plot(x, y, args, mfc="none", markersize = 10)
+	else:
+		plt.plot(x, y, args)
 	if x_min != x_max:
 		plt.xlim(x_min, x_max)
 	if y_min != y_max:
 		plt.ylim(y_min, y_max)
 
 	plt.show(block = False)
+
