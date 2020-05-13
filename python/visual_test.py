@@ -6,6 +6,47 @@ import obrada
 import data_filter
 from measurement import Measurement
 
+
+'''
+Pass data to Plot
+1* give directly as
+	list of measurements or
+	1d list, np.array .... or
+	2d list  np.array .... (array of points)
+ex. Plot(data = [1, 2, 3, 4])
+	Plot(data = [[1, 2], [1, 0], [3, 2]])
+	----------------
+2* specify machine and list of sensors to Plot
+	Plot(machine = 'FL02') - plots all sensors of FL02
+	Plot(machine = 'FL02', sensors = ['idle_wheel_V_eff', 'drive_wheel_a_max'])
+
+additional arguments:
+	figure	- positive integer specifies figure to plot on
+	name	- give name to current data
+	feature - 'rol-mean', 'rol-skew', 'rol-std'
+			- this is used for plotting sensors or list of measurements
+	window  - size of rolling window for rolling features (default is '10d' meaning 10 days)
+	kind = 'scatter', 'hist', 'line', 'density' ...
+
+	additional arguments for:
+		* kind = 'scatter':
+			s - size of points (ex. s = 10)
+			marker - type of marker (ex. marker = 'x', marker = 'o', marker = 'v'...)
+			color - self explanatory
+		* kind = 'hist'
+			bins - number of bins in histogram
+			color - ...
+		* kind = default or 'line'
+			ls - linestyle (ex. ls = '--', ls = '-.')
+			color ...
+		* kind = 'hexbin'      used for visualizing density of 2d data (in someway similiar to scatter)
+			gridsize - number of hex in row / column_names
+		* kind = 'density'     visualizes histogram with line
+		 	ls
+			color
+'''
+
+
 manual_repair = {
 	"FL01" : [
 		'2018-11-13 0:0:0.0',
@@ -114,6 +155,7 @@ def PlotTime(to_plot, **kwargs):#show_repair = True, figure = None, name = 'unkn
 
 	args = {k: v for k, v in {
 		'ax' : M.get_ax(kwargs.get('figure', -1)),
+		'color' 	: kwargs.get('color', None),
 		'ls' : kwargs.get('ls', None)
 	}.items() if v is not None}
 
