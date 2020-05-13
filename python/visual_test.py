@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from datetime import datetime
 import obrada
 import data_filter
-from measurement import Measurement as M
+from measurement import Measurement
 
 manual_repair = {
 	"FL01" : [
@@ -72,23 +72,123 @@ def Convert_dates(L, y = 'unknown'):
 	return data
 
 # list of numbers
-def PlotHisto(L, number_of_columns = 50):
-	data = pd.DataFrame(columns = ['realvalue'])
+def Plot1d(to_plot, **kwargs):
+	args = {k: v for k, v in {
+		'ax' 		: M.get_ax(kwargs.get('figure', -1)),
+		'kind'		: kwargs.get('kind', 'scatter'),
+		'color' 	: kwargs.get('color', None),
+		's'     	: kwargs.get('s', None),
+		'marker'    : kwargs.get('marker', None),
+		'bins'		: kwargs.get('bins', None)
+	}.items() if v is not None}
 
-	data = []
-	for x in L:
-		row = {}
-		row['realvalue'] = x
-		data.append(row)
-	data = pd.DataFrame(data)
-
-	data.plot(kind = 'hist', bins = number_of_columns)
-	data.plot(kind = 'density')
-
+	for data in to_plot:
+		if args['kind'] in ['density', 'hist']:
+			data.plot(**args)
+		else:
+			data['y'] = 0
+			args['kind'] = 'scatter'
+			if not 's' in args.keys():
+				args['s'] = 30
+			data.plot(x = data.columns[0], y = data.columns[1], **args)
 	plt.show(block = False)
 
+def Plot2d(to_plot, **kwargs):
+	args = {k: v for k, v in {
+		'ax' 		: M.get_ax(kwargs.get('figure', -1)),
+		'kind'		: kwargs.get('kind', 'scatter'),
+		'color' 	: kwargs.get('color', None),
+		's'     	: kwargs.get('s', None),
+		'marker'    : kwargs.get('marker', None),
+		'gridsize'	: kwargs.get('gridsize', None)
+	}.items() if v is not None}
+	if args['kind'] == 'hexbin':
+		if not 'gridsize' in args.keys():
+			args['gridsize'] = 15
+	for df in to_plot:
+		print(df)
+		ax = df.plot(x = df.columns[0], y = df.columns[1],  **args)
+		args['ax'] = ax
+
+def PlotTime(to_plot, **kwargs):#show_repair = True, figure = None, name = 'unknown', feature = 'basic', window = '10d', ls = None):
+
+	args = {k: v for k, v in {
+		'ax' : M.get_ax(kwargs.get('figure', -1)),
+		'ls' : kwargs.get('ls', None)
+	}.items() if v is not None}
+
+	feature = kwargs.get('feature', 'basic')
+	window 	= kwargs.get('window', '10d')
+
+	for df in to_plot:
+		ApplyFeature(df, feature, window)
+		ax = df.plot(**args)
+		args['ax'] = ax
+
+	M.refresh()
+	print('Finished')
+
+def Plot(data = [], machine = 'FL01', sensors = [], **kwargs):
+	to_plot = []
+	datatype = None
+
+	if not len(data):
+		datatype = "TIME"
+		if not len(sensors):
+			for sensor in obrada.list_sensors[machine]:
+				sensors.append(sensor)
+		print('Plotting sensors...')
+		for sensor in sensors:
+			temp = []
+			data_filter.filtered_data(temp, machine, sensor)
+			temp = Convert_dates(temp, f'{machine} - {sensor}')
+			print(f'{machine} - {sensor}')
+			to_plot.append(temp)
+	else:
+		print('Plotting data...')
+		if isinstance(data[0], Measurement):
+			datatype = "TIME"
+			name = kwargs.get('name', 'unknown')
+			to_plot.append(Convert_measurements(data, name, feature))
+		else:
+			data = pd.DataFrame(data)
+			if len(data.columns) == 1:
+				datatype = '1d'
+			elif len(data.columns):
+				datatype = '2d'
+			else:
+				print('Cannot recognize data type')
+				return
+			to_plot.append(data)
+
+	if datatype == "TIME":
+		PlotTime(to_plot, **kwargs)
+	elif datatype == '1d':
+		Plot1d(to_plot, **kwargs)
+	elif datatype == '2d':
+		Plot2d(to_plot, **kwargs)
+
+	M.refresh()
+
+class Manager:
+	def __init__(self):
+		plt.close('all')
+	def get_ax(self, fig):
+		if fig not in plt.get_fignums():
+			return None
+		return plt.figure(fig).get_axes()[0]
+	def refresh(self):
+		plt.show(block = False)
+
+M = Manager()
+
+
+# -------------------------
+
+# -------------------------
+
+
 def Plot_data(machine = 'FL01', sensor = obrada.list_sensors['FL01'][2]):
-	print(machine, sensor)
 
 	filename = f"data/{machine}/{sensor}.csv"
 
@@ -112,130 +212,3 @@ def Plot_data(machine = 'FL01', sensor = obrada.list_sensors['FL01'][2]):
 	data.set_index([x], inplace = True)
 
 	return data
-
-def PlotSensor(machine = 'FL01', sensor = obrada.list_sensors['FL01'][0]):
-
-	data = Plot_data(machine, sensor)
-	if len(data) == 0:
-		return
-
-	data.plot()
-
-	for when in manual_repair[machine]:
-		plt.axvline(x = when, color = '0.2', ls = '--')
-
-	plt.legend(['realvalue', 'manual_repair'])
-	plt.show(block = False)
-
-def PlotMachine(machine = 'FL01'):
-
-	all_sensors = []
-	try:
-		all_sensors = obrada.list_sensors['machine']
-	except:
-		print('Cannot find machine')
-		return
-
-	data = {}
-	for sensor in all_sensors:
-		data[senor] = Plot_data(machine, sensor)
-
-	ax = None
-
-	for when in manual_repair[machine]:
-		plt.axvline(x = when, color = '0.2', ls = '--')
-
-	plt.legend(['realvalue', 'manual_repair'])
-	plt.show(block = False)
-
-temp = None
-
-# data is list of Measurment-s
-def Plot_feature(*, data = [], machine = 'FL01', senors = []):
-	if len(data):
-		PlotTime(data)
-
-	data = Plot_data(machine, sensor)
-	if len(data) == 0:
-		return
-
-	data['mean'] = data['realvalue'].rolling(window, min_periods = 1).mean()
-	global temp
-	if temp:
-		temp = data['mean'].plot(ax = temp)
-	else:
-		temp = data['mean'].plot()
-
-	for when in manual_repair[machine]:
-		plt.axvline(x = when, color = '0.2', ls = '--')
-
-	plt.legend(['rolling mean', 'manual_repair'])
-	plt.show(block = False)
-
-'''
-Plots realvalue data in correspondance to time
-
-examples
-PlotTime(machine = 'FL02')
-L := list of meausurement
-PlotTime(data = L)
-PlotTime(machine = 'FL03', sensors = ['lifting_motor_a_max','lifting_motor_V_eff'], feature = 'rol-mean')
-
-'''
-
-
-def PlotTime(*, data = [], machine = 'FL01', sensors = [], figure = None, kind = None, frmt = None, name = 'unknown', feature = 'basic', window = '10d'):
-	to_plot = []
-
-	if not len(data):
-		if not len(sensors):
-			for sensor in obrada.list_sensors[machine]:
-				sensors.append(sensor)
-		print('Plotting sensors...')
-		for sensor in sensors:
-			temp = []
-			data_filter.filtered_data(temp, machine, sensor)
-			temp = Convert_dates(temp, f'{machine} - {sensor}')
-			print(f'{machine} - {sensor}')
-			to_plot.append(temp)
-	else:
-		print('Plotting data...')
-		to_plot.append(Convert_dates(data, name, feature))
-
-	args = {k: v for k, v in {
-		'ax' : M.get_ax(figure),
-		'kind' : kind,
-		'frmt' : frmt
-	}.items() if v is not None}
-
-	for df in to_plot:
-		ApplyFeature(df, feature, window)
-		ax = df.plot(**args)
-		args['ax'] = ax
-
-	M.refresh()
-	print('Finished')
-
-def Plot2d(data, x_min = 0, x_max = 0, y_min = 0, y_max = 0):
-	x = [p[0] for p in data]
-	y = [p[1] for p in data]
-
-	plt.plot(x, y, 'ro')
-	if x_min != x_max:
-		plt.xlim(x_min, x_max)
-	if y_min != y_max:
-		plt.ylim(y_min, y_max)
-
-	plt.show(block = False)
-
-class Manager:
-	def __init__(self):
-		plt.close('all')
-	def get_ax(self, fig):
-		if fig not in plt.get_fignums():
-			return None
-		return plt.figure(fig).get_axes()[0]
-	def refresh(self):
-		plt.show(block = False)
-
-M = Manager()
