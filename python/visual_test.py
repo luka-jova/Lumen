@@ -1,8 +1,7 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-plt.style.use('ggplot')
-plt.close('all')
+from datetime import datetime
 import obrada
 from measurement import Measurement as M
 import matplotlib
@@ -14,14 +13,45 @@ if matplotlib.get_backend() != RECOMMENDED_MATPLOTLIB_BACKEND:
 
 
 '''
-	!!!
-	User functions:
-	Plot(machine, sensor) - plots machine with x-axis being start_timestamp
-	Plot_rolling_mean(machine, sensor, window) - same but adds rolling mean
-	Plot2d(matrix, xmin, xmax, ymin, ymax) - plots points
-					....................
-						 optional
+Pass data to Plot
+1* give directly as
+	list of measurements or
+	1d list, np.array .... or
+	2d list  np.array .... (array of points)
+ex. Plot(data = [1, 2, 3, 4])
+	Plot(data = [[1, 2], [1, 0], [3, 2]])
+	----------------
+2* specify machine and list of sensors to Plot
+	Plot(machine = 'FL02') - plots all sensors of FL02
+	Plot(machine = 'FL02', sensors = ['idle_wheel_V_eff', 'drive_wheel_a_max'])
+
+additional arguments:
+	figure	- positive integer specifies figure to plot on
+	name	- give name to current data
+	feature - 'rol-mean', 'rol-skew', 'rol-std'
+			- this is used for plotting sensors or list of measurements
+	window  - size of rolling window for rolling features (default is '10d' meaning 10 days)
+	kind = 'scatter', 'hist', 'line', 'density' ...
+
+	additional arguments for:
+		* kind = 'scatter':
+			s - size of points (ex. s = 10)
+			marker - type of marker (ex. marker = 'x', marker = 'o', marker = 'v'...)
+			color - self explanatory
+		* kind = 'hist'
+			bins - number of bins in histogram
+			color - ...
+		* kind = default or 'line'
+			ls - linestyle (ex. ls = '--', ls = '-.')
+			color ...
+		* kind = 'hexbin'      used for visualizing density of 2d data (in someway similiar to scatter)
+			gridsize - number of hex in row / column_names
+		* kind = 'density'     visualizes histogram with line
+		 	ls
+			color
 '''
+
+
 manual_repair = {
 	"FL01" : [
 		'2018-11-13 0:0:0.0',
@@ -43,47 +73,169 @@ manual_repair = {
 }
 # Gets data from data folder
 
-def Convert_dates(L):
+def RollingMean(data, window = '10d'):
+	orig = data.columns[0]
+	feat = orig + ' - rolling mean'
+	data[feat] = data[orig].rolling(window).mean()
+	data.drop(columns = orig, inplace = True)
+
+def RollingSkweness(data, window = '10d'):
+	orig = data.columns[0]
+	feat = orig + ' - rolling skew'
+	data[feat] = data[orig].rolling(window).skew()
+	data.drop(columns = orig, inplace = True)
+
+def RollingStandardDeviation(data, window = '10d'):
+	orig = data.columns[0]
+	feat = orig + ' - rolling std'
+	data[feat] = data[orig].rolling(window).std()
+	data.drop(columns = orig, inplace = True)
+
+features = {
+	'basic'    : lambda x, y: None,
+	'rol-mean' : RollingMean,
+	'rol-skew' : RollingSkweness,
+	'rol-std'  : RollingStandardDeviation
+}
+
+def ApplyFeature(data, feature, window):
+	features[feature](data, window)
+
+def Convert_dates(L, y = 'unknown'):
 	res = pd.DataFrame(columns = ('timestamp', 'value'))
 
 	data = []
 	for m in L:
 		row = {}
-		row['timestamp'] = m.start_timestamp
-		row['value'] = m.realvalue
+		row['timestamp'] = m['start_timestamp'].strip('"')
+		row[y] = m.realvalue
 		data.append(row)
 
 	data = pd.DataFrame(data)
-	print(data)
-	#data.timestamp = pd.to_datetime(data['timestamp'], format='%Y-%m-%d %H:%M:%S.%f')
+	data.timestamp = pd.to_datetime(data['timestamp'], format='%Y-%m-%d %H:%M:%S.%f')
 	data.set_index(['timestamp'], inplace = True)
+
 	return data
 
-# list of Measurment objects
-def PlotTime(L):
-	data = Convert_dates(L)
-	data.plot()
-
-	plt.show(block = False)
-
 # list of numbers
-def PlotHisto(L, number_of_columns = 50):
-	data = pd.DataFrame(columns = ['realvalue'])
+def Plot1d(to_plot, **kwargs):
+	args = {k: v for k, v in {
+		'ax' 		: M.get_ax(kwargs.get('figure', -1)),
+		'kind'		: kwargs.get('kind', 'scatter'),
+		'color' 	: kwargs.get('color', None),
+		's'     	: kwargs.get('s', None),
+		'marker'    : kwargs.get('marker', None),
+		'bins'		: kwargs.get('bins', None)
+	}.items() if v is not None}
 
-	data = []
-	for x in L:
-		row = {}
-		row['realvalue'] = x
-		data.append(row)
-	data = pd.DataFrame(data)
-
-	data.plot(kind = 'hist', bins = number_of_columns)
-	data.plot(kind = 'density')
-
+	for data in to_plot:
+		if args['kind'] in ['density', 'hist']:
+			data.plot(**args)
+		else:
+			data['y'] = 0
+			args['kind'] = 'scatter'
+			if not 's' in args.keys():
+				args['s'] = 30
+			data.plot(x = data.columns[0], y = data.columns[1], **args)
 	plt.show(block = False)
+
+def Plot2d(to_plot, **kwargs):
+	args = {k: v for k, v in {
+		'ax' 		: M.get_ax(kwargs.get('figure', -1)),
+		'kind'		: kwargs.get('kind', 'scatter'),
+		'color' 	: kwargs.get('color', None),
+		's'     	: kwargs.get('s', None),
+		'marker'    : kwargs.get('marker', None),
+		'gridsize'	: kwargs.get('gridsize', None)
+	}.items() if v is not None}
+	if args['kind'] == 'hexbin':
+		if not 'gridsize' in args.keys():
+			args['gridsize'] = 15
+	for df in to_plot:
+		print(df)
+		ax = df.plot(x = df.columns[0], y = df.columns[1],  **args)
+		args['ax'] = ax
+
+def PlotTime(to_plot, **kwargs):#show_repair = True, figure = None, name = 'unknown', feature = 'basic', window = '10d', ls = None):
+
+	args = {k: v for k, v in {
+		'ax' : M.get_ax(kwargs.get('figure', -1)),
+		'color' 	: kwargs.get('color', None),
+		'ls' : kwargs.get('ls', None)
+	}.items() if v is not None}
+
+	feature = kwargs.get('feature', 'basic')
+	window 	= kwargs.get('window', '10d')
+
+	for df in to_plot:
+		ApplyFeature(df, feature, window)
+		ax = df.plot(**args)
+		args['ax'] = ax
+
+	M.refresh()
+	print('Finished')
+
+def Plot(data = [], machine = 'FL01', sensors = [], **kwargs):
+	to_plot = []
+	datatype = None
+
+	if not len(data):
+		datatype = "TIME"
+		if not len(sensors):
+			for sensor in obrada.list_sensors[machine]:
+				sensors.append(sensor)
+		print('Plotting sensors...')
+		for sensor in sensors:
+			temp = []
+			data_filter.filtered_data(temp, machine, sensor)
+			temp = Convert_dates(temp, f'{machine} - {sensor}')
+			print(f'{machine} - {sensor}')
+			to_plot.append(temp)
+	else:
+		print('Plotting data...')
+		if isinstance(data[0], Measurement):
+			datatype = "TIME"
+			name = kwargs.get('name', 'unknown')
+			to_plot.append(Convert_measurements(data, name, feature))
+		else:
+			data = pd.DataFrame(data)
+			if len(data.columns) == 1:
+				datatype = '1d'
+			elif len(data.columns):
+				datatype = '2d'
+			else:
+				print('Cannot recognize data type')
+				return
+			to_plot.append(data)
+
+	if datatype == "TIME":
+		PlotTime(to_plot, **kwargs)
+	elif datatype == '1d':
+		Plot1d(to_plot, **kwargs)
+	elif datatype == '2d':
+		Plot2d(to_plot, **kwargs)
+
+	M.refresh()
+
+class Manager:
+	def __init__(self):
+		plt.close('all')
+	def get_ax(self, fig):
+		if fig not in plt.get_fignums():
+			return None
+		return plt.figure(fig).get_axes()[0]
+	def refresh(self):
+		plt.show(block = False)
+
+M = Manager()
+
+
+# -------------------------
+
+# -------------------------
+
 
 def Plot_data(machine = 'FL01', sensor = obrada.list_sensors['FL01'][2]):
-	print(machine, sensor)
 
 	filename = f"data/{machine}/{sensor}.csv"
 
@@ -107,115 +259,4 @@ def Plot_data(machine = 'FL01', sensor = obrada.list_sensors['FL01'][2]):
 	data.set_index([x], inplace = True)
 
 	return data
-
-def PlotSensor(machine = 'FL01', sensor = obrada.list_sensors['FL01'][0]):
-
-	data = Plot_data(machine, sensor)
-	if len(data) == 0:
-		return
-
-	data.plot()
-
-	for when in manual_repair[machine]:
-		plt.axvline(x = when, color = '0.2', ls = '--')
-
-	plt.legend(['realvalue', 'manual_repair'])
-	plt.show(block = False)
-
-def PlotMachine(machine = 'FL01'):
-
-	all_sensors = []
-	try:
-		all_sensors = obrada.list_sensors['machine']
-	except:
-		print('Cannot find machine')
-		return
-
-	data = {}
-	for sensor in all_sensors:
-		data[senor] = Plot_data(machine, sensor)
-
-	ax = None
-
-	for when in manual_repair[machine]:
-		plt.axvline(x = when, color = '0.2', ls = '--')
-
-	plt.legend(['realvalue', 'manual_repair'])
-	plt.show(block = False)
-
-temp = None
-#ako se nista ne pokaze samo pokreni komandu opet
-# Plot rolling window mean of some machine and sensor
-# Can plot multiple machines / sensors on same graph if called multiple times in a row
-def Plot_rolling_mean(machine = 'FL01', sensor = obrada.list_sensors['FL01'][0], window = '10d'):
-
-	data = Plot_data(machine, sensor)
-	if len(data) == 0:
-		return
-
-	data['mean'] = data['realvalue'].rolling(window, min_periods = 1).mean()
-	global temp
-	if temp:
-		temp = data['mean'].plot(ax = temp)
-	else:
-		temp = data['mean'].plot()
-
-	for when in manual_repair[machine]:
-		plt.axvline(x = when, color = '0.2', ls = '--')
-
-	plt.legend(['rolling mean', 'manual_repair'])
-	plt.show(block = False)
-
-'''
-	date format in '%Y-%m-%d %H:%M:%S.%f'
-	example:
-	"2017-11-30" or
-	"2019-10-25 23:02:03.5"
-'''
-def Trim_data(start_date, end_date, data):
-	data = data[(start_date < data.index) & (data.index < end_date)]
-	return data
-
-# Displays distribution of realvalues in given date range for machine and sensor
-def Distribution(start_date, end_date, machine = 'FL02', sensor = obrada.list_sensors['FL02'][0]):
-	data = Trim_data(start_date, end_date, Plot_data(machine, sensor))
-	if len(data) == 0:
-		return
-
-	# odjebi datume
-	data.sort_values(by = ['realvalue'], inplace = True)
-	data.reset_index(drop = True, inplace = True)
-
-	data.plot(kind = 'density')
-	data.plot(kind = 'hist', bins = 100)
-
-	plt.show(block = False)
-
-def Close():
-	plt.close('all')
-
-def Show():
-	plt.show(block = False)
-
-'''
-	plots list of 2d points
-	ex. data = [[1, 2], [3, 1], [2, 1]]
-	can be called multiple times
-	if window is not terminated old points will stay
-'''
-
-
-def Plot2d(data, x_min = 0, x_max = 0, y_min = 0, y_max = 0, args = 'xk'):
-	x = data[:, 0]
-	y = data[:, 1]
-	if 'o' in args:
-		plt.plot(x, y, args, mfc="none", markersize = 10)
-	else:
-		plt.plot(x, y, args)
-	if x_min != x_max:
-		plt.xlim(x_min, x_max)
-	if y_min != y_max:
-		plt.ylim(y_min, y_max)
-
-	plt.show(block = False)
 
