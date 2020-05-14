@@ -12,7 +12,6 @@ if matplotlib.get_backend() != RECOMMENDED_MATPLOTLIB_BACKEND:
 	print("Setting up backend to TkAgg")
 	matplotlib.use(RECOMMENDED_MATPLOTLIB_BACKEND)
 
-
 '''
 Pass data to Plot
 1* give directly as
@@ -50,6 +49,17 @@ additional arguments:
 		* kind = 'density'     visualizes histogram with line
 		 	ls
 			color
+
+calls:
+Plot(machine = 'FL03', feature = 'rol-mean')
+Plot(machine = 'FL02', sensors = ['drive_motor_V_eff', 'drive_gear_V_eff'], feature = 'rol-skew')
+Plot(data = [3, 2, 2.3, 3.1, 3.2, 1.2, 4, 5, 4.2], kind = 'hist', bins = 3)
+Plot(data = [3, 2, 2.3, 3.1, 3.2, 1.2, 4, 5, 4.2], kind = 'density', ls = '--', name = 'function of distribution')
+'''
+
+
+'''
+PlotCon
 '''
 
 
@@ -73,6 +83,22 @@ manual_repair = {
 	]
 }
 # Gets data from data folder
+
+
+def PlotC(X, Y, Z):
+	'''delta = 0.025
+	x = np.arange(-3.0, 3.0, delta)
+	y = np.arange(-2.0, 2.0, delta)
+	X, Y = np.meshgrid(x, y)
+	Z1 = np.exp(-X**2 - Y**2)
+	Z2 = np.exp(-(X - 1)**2 - (Y - 1)**2)
+	Z = (Z1 - Z2) * 2
+	'''
+	fig, ax = plt.subplots()
+	CS = ax.contour(X, Y, Z)
+
+	ax.clabel(CS, CS.levels, inline=True, fontsize=10)
+	M.refresh()
 
 def RollingMean(data, window = '10d'):
 	orig = data.columns[0]
@@ -125,11 +151,14 @@ def Plot1d(to_plot, **kwargs):
 		'kind'		: kwargs.get('kind', 'scatter'),
 		'color' 	: kwargs.get('color', None),
 		's'     	: kwargs.get('s', None),
+		'ls'     	: kwargs.get('ls', None),
 		'marker'    : kwargs.get('marker', None),
 		'bins'		: kwargs.get('bins', None)
 	}.items() if v is not None}
 
 	for data in to_plot:
+		print(args)
+		print(data)
 		if args['kind'] in ['density', 'hist']:
 			data.plot(**args)
 		else:
@@ -146,6 +175,7 @@ def Plot2d(to_plot, **kwargs):
 		'kind'		: kwargs.get('kind', 'scatter'),
 		'color' 	: kwargs.get('color', None),
 		's'     	: kwargs.get('s', None),
+		'ls'     	: kwargs.get('ls', None),
 		'marker'    : kwargs.get('marker', None),
 		'gridsize'	: kwargs.get('gridsize', None)
 	}.items() if v is not None}
@@ -176,11 +206,11 @@ def PlotTime(to_plot, **kwargs):#show_repair = True, figure = None, name = 'unkn
 	M.refresh()
 	print('Finished')
 
-def Plot(data = [], machine = 'FL01', sensors = [], **kwargs):
+def Plot(data = [], machine = None, sensors = [], **kwargs):
 	to_plot = []
 	datatype = None
 
-	if not len(data):
+	if machine:
 		datatype = "TIME"
 		if not len(sensors):
 			for sensor in obrada.list_sensors[machine]:
@@ -192,22 +222,26 @@ def Plot(data = [], machine = 'FL01', sensors = [], **kwargs):
 			temp = Convert_dates(temp, f'{machine} - {sensor}')
 			print(f'{machine} - {sensor}')
 			to_plot.append(temp)
-	else:
+	elif len(data):
+		name = kwargs.get('name', 'unknown')
 		print('Plotting data...')
 		if isinstance(data[0], Measurement): 
 			datatype = "TIME"
-			name = kwargs.get('name', 'unknown')
 			to_plot.append(Convert_measurements(data, name, feature))
 		else:
 			data = pd.DataFrame(data)
 			if len(data.columns) == 1:
+				data.columns = [name]
 				datatype = '1d'
 			elif len(data.columns):
+				data.columns = ['x', name]
 				datatype = '2d'
 			else:
 				print('Cannot recognize data type')
 				return
 			to_plot.append(data)
+	else:
+		print('There is no data to plot')
 
 	if datatype == "TIME":
 		PlotTime(to_plot, **kwargs)
