@@ -3,8 +3,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from datetime import datetime
 import obrada
-from measurement import Measurement as M
-import matplotlib
+import data_filter
+from measurement import Measurement
+
 
 RECOMMENDED_MATPLOTLIB_BACKEND = "TkAgg"
 if matplotlib.get_backend() != RECOMMENDED_MATPLOTLIB_BACKEND:
@@ -193,7 +194,7 @@ def Plot(data = [], machine = 'FL01', sensors = [], **kwargs):
 			to_plot.append(temp)
 	else:
 		print('Plotting data...')
-		if isinstance(data[0], Measurement):
+		if isinstance(data[0], Measurement): 
 			datatype = "TIME"
 			name = kwargs.get('name', 'unknown')
 			to_plot.append(Convert_measurements(data, name, feature))
