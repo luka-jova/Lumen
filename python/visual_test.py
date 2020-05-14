@@ -151,6 +151,8 @@ def Plot1d(to_plot, **kwargs):
 	}.items() if v is not None}
 
 	for data in to_plot:
+		print(args)
+		print(data)
 		if args['kind'] in ['density', 'hist']:
 			data.plot(**args)
 		else:
@@ -198,11 +200,11 @@ def PlotTime(to_plot, **kwargs):#show_repair = True, figure = None, name = 'unkn
 	M.refresh()
 	print('Finished')
 
-def Plot(data = [], machine = 'FL01', sensors = [], **kwargs):
+def Plot(data = [], machine = None, sensors = [], **kwargs):
 	to_plot = []
 	datatype = None
 
-	if not len(data):
+	if machine:
 		datatype = "TIME"
 		if not len(sensors):
 			for sensor in obrada.list_sensors[machine]:
@@ -214,7 +216,7 @@ def Plot(data = [], machine = 'FL01', sensors = [], **kwargs):
 			temp = Convert_dates(temp, f'{machine} - {sensor}')
 			print(f'{machine} - {sensor}')
 			to_plot.append(temp)
-	else:
+	elif len(data):
 		name = kwargs.get('name', 'unknown')
 		print('Plotting data...')
 		if isinstance(data[0], Measurement):
@@ -232,6 +234,8 @@ def Plot(data = [], machine = 'FL01', sensors = [], **kwargs):
 				print('Cannot recognize data type')
 				return
 			to_plot.append(data)
+	else:
+		print('There is no data to plot')
 
 	if datatype == "TIME":
 		PlotTime(to_plot, **kwargs)
