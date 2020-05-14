@@ -1,5 +1,5 @@
 import visual_test as vis
-import filter
+import data_filter as filter
 import anomaly_detector as ad
 import numpy as np
 from numpy import inf
@@ -83,7 +83,7 @@ def dispSelectedInfo():
 def plotAllMeasurementsTimeline():
 	global CUR_MACHINE, CUR_SENSOR, mu, Sigma2, epsilon, F1, estimated
 	dispSelectedInfo()
-	vis.PlotSensor(CUR_MACHINE, CUR_SENSOR)
+	vis.Plot(machine = CUR_MACHINE, sensors = [CUR_SENSOR])
 
 def plotMeasurementsDistribution(start = 0, duration = None, end = inf):
 	global CUR_MACHINE, CUR_SENSOR, mu, Sigma2, epsilon, F1, estimated
@@ -91,7 +91,7 @@ def plotMeasurementsDistribution(start = 0, duration = None, end = inf):
 	dispSelectedInfo()
 	filter.filtered_data(meas_list, CUR_MACHINE, CUR_SENSOR, start, duration, end)
 	meas_v = filter.measurements_to_numpy_vector(meas_list)
-	vis.PlotHisto(meas_v)
+	vis.Plot(meas_v, kind = 'hist', bins = 100)
 
 def estimate(start_train = 0, duration_train = None, end_train = inf, start_outlier = 0, duration_outlier = None, end_outlier = inf):
 	global CUR_MACHINE, CUR_SENSOR, mu, Sigma2, epsilon, F1, estimated
@@ -119,12 +119,10 @@ def estimate(start_train = 0, duration_train = None, end_train = inf, start_outl
 	print("M_cvs_good", M_cvs_good, cvs_good_v.shape[ 0 ])
 	print("M_cvs_outlier", M_cvs_outlier, cvs_outlier_v.shape[ 0 ])
 	
-	#plot histogram for train_list -> should resemble Gaussian
 	print("Plotting histogram of Train data, should resemble Gaussian")
-	vis.PlotHisto(train_v[:, 0])
+	vis.Plot(train_v[:, 0], kind = 'density')
 	
 	mu, Sigma2 = ad.estimateMultivariateGaussian(train_v)
-	#plot estimation on histogram
 	estimated = True
 	print("Estimation finished.", "Mu found:", mu, "Sigma2 found:", Sigma2, sep = "\n")
 	
@@ -141,8 +139,3 @@ def estimate(start_train = 0, duration_train = None, end_train = inf, start_outl
 	print("Out of all outliers, we predicted ", cvs_outlier_cnt, "/", M_cvs_outlier, " to be outlier", sep="")
 	print("Out of all good measurements, we predicted ", cvs_good_cnt, "/", M_cvs_good, " to be good", sep = "")	
 	
-def runDiagnostics(machine_name, sensor):
-	meas_after_repair = []
-	
-	filter.filtered_data(all_meas, machine_name, sensor, start = filter.getRepairs(machine_name)[ 0 ], duration = "0000-01-00")
-	vis.Plot()

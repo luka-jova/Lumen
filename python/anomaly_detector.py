@@ -99,7 +99,7 @@ def run_sample():
 	Xcvs = np.vstack((Xcvs, ((np.random.rand(20, 2) - 0.5) * 100) + np.array([4, -2]) ))
 	ycvs = np.hstack((ycvs, np.array([True] * 20)))
 	
-	vis.Plot2d(X)
+	vis.Plot(X, kind='scatter', color='k', marker='x', figure = 1)
 	
 	mu, Sigma2 = estimateMultivariateGaussian(X)
 	
@@ -109,12 +109,12 @@ def run_sample():
 	
 	#plot Xcvs, color outliers in light blue
 	print(Xcvs[200:, :])
-	vis.Plot2d(Xcvs[200:, :], args = "xb")
+	vis.Plot(Xcvs[200:, :], kind = 'scatter', color='b', marker='o', figure=1)
 	print("Best eps: ", eps, "\nF1: ", F1)
 	
 	outliers = Xcvs[ np.where(pred_cvs < eps) ]
 	print("Found", outliers.shape[0], "outliers:")
 	print(outliers)
-	vis.Plot2d(outliers, args = "o")
+	vis.Plot(outliers, kind = 'scatter', marker='x', color='r', figure = 1)
 	#circle all outliers
 	
