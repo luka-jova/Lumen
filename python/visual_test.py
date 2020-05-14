@@ -6,7 +6,6 @@ import obrada
 import data_filter
 from measurement import Measurement
 
-
 '''
 Pass data to Plot
 1* give directly as
@@ -44,6 +43,17 @@ additional arguments:
 		* kind = 'density'     visualizes histogram with line
 		 	ls
 			color
+
+calls:
+Plot(machine = 'FL03', feature = 'rol-mean')
+Plot(machine = 'FL02', sensors = ['drive_motor_V_eff', 'drive_gear_V_eff'], feature = 'rol-skew')
+Plot(data = [3, 2, 2.3, 3.1, 3.2, 1.2, 4, 5, 4.2], kind = 'hist', bins = 3)
+Plot(data = [3, 2, 2.3, 3.1, 3.2, 1.2, 4, 5, 4.2], kind = 'density', ls = '--', name = 'function of distribution')
+'''
+
+
+'''
+PlotCon
 '''
 
 
@@ -67,6 +77,22 @@ manual_repair = {
 	]
 }
 # Gets data from data folder
+
+
+def PlotC(X, Y, Z):
+	'''delta = 0.025
+	x = np.arange(-3.0, 3.0, delta)
+	y = np.arange(-2.0, 2.0, delta)
+	X, Y = np.meshgrid(x, y)
+	Z1 = np.exp(-X**2 - Y**2)
+	Z2 = np.exp(-(X - 1)**2 - (Y - 1)**2)
+	Z = (Z1 - Z2) * 2
+	'''
+	fig, ax = plt.subplots()
+	CS = ax.contour(X, Y, Z)
+
+	ax.clabel(CS, CS.levels, inline=True, fontsize=10)
+	M.refresh()
 
 def RollingMean(data, window = '10d'):
 	orig = data.columns[0]
@@ -187,16 +213,18 @@ def Plot(data = [], machine = 'FL01', sensors = [], **kwargs):
 			print(f'{machine} - {sensor}')
 			to_plot.append(temp)
 	else:
+		name = kwargs.get('name', 'unknown')
 		print('Plotting data...')
 		if isinstance(data[0], Measurement):
 			datatype = "TIME"
-			name = kwargs.get('name', 'unknown')
 			to_plot.append(Convert_measurements(data, name, feature))
 		else:
 			data = pd.DataFrame(data)
 			if len(data.columns) == 1:
+				data.columns = [name]
 				datatype = '1d'
 			elif len(data.columns):
+				data.columns = ['x', name]
 				datatype = '2d'
 			else:
 				print('Cannot recognize data type')
