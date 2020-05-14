@@ -19,7 +19,7 @@ def to_timestamp(s, is_interval = False):
 			else:
 				hms = s
 			result += sum([float(it) * secs for it, secs in
-							zip(hms.split('-'), (3600, 60, 1))])
+							zip(hms.split(':'), (3600, 60, 1))])
 		return result
 	elif ' ' in s and '.' in s:
 		return dt.strptime(s, '%Y-%m-%d %H:%M:%S.%f').timestamp()
@@ -53,6 +53,7 @@ def filtered_data(dest_list, machine, sensor, start = 0, duration = None, end = 
 		Start filling at that point, default value: 0
 	duration : tuple, str, float or int
 		Keep filling for this many points, default value: None
+		combination (start, duration) will provide all measures in interval [first_after_start, first_after_start+duration]
 	end : tuple, str, float or int
 		Keep filling until you reach this point, default value: numpy.inf (float)
 	invert : bool

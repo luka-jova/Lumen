@@ -6,23 +6,93 @@ from numpy import inf
 
 CUR_MACHINE = "FL01"
 CUR_SENSOR = "drive_gear_V_eff"
+list_V_sensors = [
+	"drive_gear_V_eff",
+	"drive_motor_V_eff",
+	"drive_wheel_V_eff",
+	"idle_wheel_V_eff",
+	"lifting_gear_V_eff",
+	"lifting_motor_V_eff"
+]
 
+
+list_a_sensors = [
+	"drive_gear_a_max",
+	"drive_motor_a_max",
+	"drive_wheel_a_max",
+	"idle_wheel_a_max",
+	"lifting_gear_a_max",
+	"lifting_motor_a_max"
+]
+
+list_debug_sensors = [
+	"drive_gear_V_eff",
+	"drive_wheel_V_eff"
+]
+
+list_sensors = {
+	"FL01": list_V_sensors + list_a_sensors,
+	"FL02": list_V_sensors + list_a_sensors,
+	"FL03": list_V_sensors + list_a_sensors,
+	"FL04": list_V_sensors + list_a_sensors,
+	"FL05": list_V_sensors + list_a_sensors,
+	"FL06": list_V_sensors + list_a_sensors,
+	"FL07": list_V_sensors + list_a_sensors,
+	"debug-machine": list_debug_sensors
+}
+list_machines = ["FL01", "FL02", "FL03", "FL04", "FL05", "FL06", "FL07", "debug-machine"]
 mu = 0
 Sigma2 = []
 epsilon = 0
 F1 = 0
 estimated = False
 
-def select(machine_name, sensor):
-	global CUR_MACHINE, CUR_SENSOR, mu, Sigma2, epsilon, F1, estimated
-	CUR_MACHINE = machine_name
-	CUR_SENSOR = sensor
+'''
+Usage:
+call select() function to select which machine and sensor you are about to use
+-displaying functions
+-estimate function
+'''
+
+def select(machine_name = "", sensor = ""):
+	global CUR_MACHINE, CUR_SENSOR, mu, Sigma2, epsilon, F1, estimated, list_machines, list_sensors
+	if machine_name == "":
+		print("Select machine:")
+		for ind, name in enumerate(list_machines):
+			print("[", ind + 1, "] ", name, sep = "")
+		ind = int(input())
+		CUR_MACHINE = list_machines[ ind - 1 ]
+		print("Select sensor:")
+		for ind, name in enumerate(list_sensors[ CUR_MACHINE ]):
+			print("[", ind + 1, "] ", name, sep = "")
+		ind = int(input())
+		CUR_SENSOR = list_sensors[ CUR_MACHINE ][ ind - 1 ]
+	else:	
+		CUR_MACHINE = machine_name
+		CUR_SENSOR = sensor
 	mu = 0
 	Sigma2 = []
 	F1 = 0
 	estimated = False
 	print("Selected:", CUR_MACHINE, CUR_SENSOR)
-	
+
+def dispSelectedInfo():
+	global CUR_MACHINE, CUR_SENSOR, mu, Sigma2, epsilon, F1, estimated
+	print("Selected ", CUR_MACHINE, CUR_SENSOR)	
+		
+def plotAllMeasurementsTimeline():
+	global CUR_MACHINE, CUR_SENSOR, mu, Sigma2, epsilon, F1, estimated
+	dispSelectedInfo()
+	vis.PlotSensor(CUR_MACHINE, CUR_SENSOR)
+
+def plotMeasurementsDistribution(start = 0, duration = None, end = inf):
+	global CUR_MACHINE, CUR_SENSOR, mu, Sigma2, epsilon, F1, estimated
+	meas_list = []
+	dispSelectedInfo()
+	filter.filtered_data(meas_list, CUR_MACHINE, CUR_SENSOR, start, duration, end)
+	meas_v = filter.measurements_to_numpy_vector(meas_list)
+	vis.PlotHisto(meas_v)
+
 def estimate(start_train = 0, duration_train = None, end_train = inf, start_outlier = 0, duration_outlier = None, end_outlier = inf):
 	global CUR_MACHINE, CUR_SENSOR, mu, Sigma2, epsilon, F1, estimated
 	print("Estimating for:\n..Machine:", CUR_MACHINE, "\n..Sensor:", CUR_SENSOR)
@@ -49,7 +119,10 @@ def estimate(start_train = 0, duration_train = None, end_train = inf, start_outl
 	print("M_cvs_good", M_cvs_good, cvs_good_v.shape[ 0 ])
 	print("M_cvs_outlier", M_cvs_outlier, cvs_outlier_v.shape[ 0 ])
 	
-	#plot histogram for meas_v -> should resemble Gaussian
+	#plot histogram for train_list -> should resemble Gaussian
+	print("Plotting histogram of Train data, should resemble Gaussian")
+	vis.PlotHisto(train_v[:, 0])
+	
 	mu, Sigma2 = ad.estimateMultivariateGaussian(train_v)
 	#plot estimation on histogram
 	estimated = True
