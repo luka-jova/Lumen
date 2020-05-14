@@ -145,6 +145,7 @@ def Plot1d(to_plot, **kwargs):
 		'kind'		: kwargs.get('kind', 'scatter'),
 		'color' 	: kwargs.get('color', None),
 		's'     	: kwargs.get('s', None),
+		'ls'     	: kwargs.get('ls', None),
 		'marker'    : kwargs.get('marker', None),
 		'bins'		: kwargs.get('bins', None)
 	}.items() if v is not None}
@@ -166,6 +167,7 @@ def Plot2d(to_plot, **kwargs):
 		'kind'		: kwargs.get('kind', 'scatter'),
 		'color' 	: kwargs.get('color', None),
 		's'     	: kwargs.get('s', None),
+		'ls'     	: kwargs.get('ls', None),
 		'marker'    : kwargs.get('marker', None),
 		'gridsize'	: kwargs.get('gridsize', None)
 	}.items() if v is not None}
