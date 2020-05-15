@@ -170,7 +170,7 @@ def Plot1d(to_plot, **kwargs):
 	window 	= kwargs.get('window', 10)
 
 	for data in to_plot:
-		ApplyFeature(df, feature, window)
+		ApplyFeature(data, feature, window)
 		if args['kind'] in ['density', 'hist']:
 			data.plot(**args)
 		else:
@@ -201,6 +201,8 @@ def Plot2d(to_plot, **kwargs):
 			args['gridsize'] = 15
 	for df in to_plot:
 		ApplyFeature(df, feature, window)
+		print(df)
+		print(args)
 		ax = df.plot(x = df.columns[0], y = df.columns[1],  **args)
 		args['ax'] = ax
 
@@ -208,7 +210,9 @@ def PlotTime(to_plot, **kwargs):#show_repair = True, figure = None, name = 'unkn
 
 	args = {k: v for k, v in {
 		'ax' 		: M.get_ax(kwargs.get('figure', -1)),
+		's'     	: kwargs.get('s', None),
 		'color' 	: kwargs.get('color', None),
+		'kind'		: kwargs.get('kind', 'line'),
 		'ls' 		: kwargs.get('ls', None),
 		'legend' 	: kwargs.get('legend', None)
 	}.items() if v is not None}
@@ -218,6 +222,10 @@ def PlotTime(to_plot, **kwargs):#show_repair = True, figure = None, name = 'unkn
 
 	for df in to_plot:
 		ApplyFeature(df, feature, window)
+		if args['kind'] == 'scatter':
+			df.reset_index(inplace = True)
+			args['x'] = df.columns[0]
+			args['y'] = df.columns[1]
 		ax = df.plot(**args)
 		args['ax'] = ax
 
@@ -240,7 +248,7 @@ def Plot(data = [], machine = None, sensors = [], **kwargs):
 		for sensor in sensors:
 			temp = []
 			data_filter.filtered_data(temp, machine, sensor)
-			temp = Convert_dates(temp, f'{machine} - {sensor}')
+			temp = Convert_measurements(temp, f'{machine} - {sensor}')
 			print(f'{machine} - {sensor}')
 			to_plot.append(temp)
 	elif len(data):
@@ -271,16 +279,17 @@ def Plot(data = [], machine = None, sensors = [], **kwargs):
 	elif datatype == '2d':
 		Plot2d(to_plot, **kwargs)
 
+	'''
 	repair = kwargs.get('repair', machine)
 	if repair:
 		for when in manual_repair[repair]:
 			plt.axvline(x=when, color="black", linestyle="--")
-
+	'''
 	M.refresh()
 
 def ax(fig):
 	return M.get_ax(fig)
-def fig(fig)
+def fig(fig):
 	return M.get_fig(fig)
 
 class Manager:
