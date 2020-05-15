@@ -3,6 +3,7 @@ import data_filter as filter
 import anomaly_detector as ad
 import numpy as np
 from numpy import inf
+import estimator
 
 CUR_MACHINE = "FL01"
 CUR_SENSOR = "drive_gear_V_eff"
@@ -109,4 +110,14 @@ def estimate(start_train = 0, duration_train = None, end_train = inf, start_outl
 	cvs_good_cnt = sum(p_cvs_all[0:M_cvs_good] >= epsilon) #found good measures out of all good measures
 	print("Out of all outliers, we predicted ", cvs_outlier_cnt, "/", M_cvs_outlier, " to be outlier", sep="")
 	print("Out of all good measurements, we predicted ", cvs_good_cnt, "/", M_cvs_good, " to be good", sep = "")	
-	
+
+def run():
+	print("Please select machine to be velocity diagnosed and sensor to be plotted")
+	select()
+	estim = estimator.Estimator(CUR_MACHINE, list_sensors[ CUR_MACHINE ])
+	new_data = {}
+	for cur_sensor in list_sensors[ CUR_MACHINE ]:
+		new_data[ cur_sensor ] = []
+		filter.filtered_data(new_data[ cur_sensor ], CUR_MACHINE, cur_sensor)
+	estim.new_data = new_data
+	estim.velocity_diagnosis()
