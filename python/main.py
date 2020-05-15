@@ -91,6 +91,7 @@ def estimate(start_train = 0, duration_train = None, end_train = inf, start_outl
 	
 	print("Plotting histogram of Train data, should resemble Gaussian")
 	vis.Plot(train_v[:, 0], kind = 'density')
+	vis.Plot(train_v[:, 0], kind = "hist", bins = 50)
 	
 	mu, Sigma2 = ad.estimateMultivariateGaussian(train_v)
 	estimated = True
