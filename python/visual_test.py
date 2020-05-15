@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib
 from datetime import datetime
 import obrada
 import data_filter
@@ -66,28 +67,9 @@ Plot(data = [3, 2, 2.3, 3.1, 3.2, 1.2, 4, 5, 4.2], kind = 'density', ls = '--', 
 PlotCon
 '''
 
+manual_repair = data_filter.manual_repair
 
-manual_repair = {
-	"FL01" : [
-		'2018-11-13 0:0:0.0',
-		'2019-02-08 0:0:0.0',
-		'2019-02-12 0:0:0.0',
-	],
-	"FL02" : [
-		'2019-04-02 0:0:0.0'
-	],
-	"FL03" : [
-		'2019-04-02 0:0:0.0'
-	],
-	"FL04" : [],
-	"FL05" : [],
-	"FL06" : [],
-	"FL07" : [
-		'2019-04-02 0:0:0.0'
-	]
-}
 # Gets data from data folder
-
 
 def PlotC(X, Y, Z):
 	'''delta = 0.025
