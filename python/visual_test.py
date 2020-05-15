@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib
 from datetime import datetime
 import obrada
 import data_filter
@@ -66,7 +67,9 @@ Plot(data = [3, 2, 2.3, 3.1, 3.2, 1.2, 4, 5, 4.2], kind = 'density', ls = '--', 
 PlotCon
 '''
 
+manual_repair = data_filter.manual_repair
 
+<<<<<<< HEAD
 manual_repair = {
 	"FL01" : [
 		'2018-11-13 0:0:0.0',
@@ -86,6 +89,8 @@ manual_repair = {
 		'2019-04-02 0:0:0.0'
 	]
 }
+=======
+>>>>>>> ab502da861c5ee732f13dc7517ccf24f39d1e383
 # Gets data from data folder
 
 
@@ -278,6 +283,7 @@ def Plot(data = [], machine = None, sensors = [], **kwargs):
 		Plot1d(to_plot, **kwargs)
 	elif datatype == '2d':
 		Plot2d(to_plot, **kwargs)
+<<<<<<< HEAD
 
 	'''
 	repair = kwargs.get('repair', machine)
@@ -285,6 +291,13 @@ def Plot(data = [], machine = None, sensors = [], **kwargs):
 		for when in manual_repair[repair]:
 			plt.axvline(x=when, color="black", linestyle="--")
 	'''
+=======
+	
+	if machine:
+		for when in manual_repair[machine]:
+			plt.axvline(x=when, color="black", linestyle="--")
+	
+>>>>>>> ab502da861c5ee732f13dc7517ccf24f39d1e383
 	M.refresh()
 
 def ax(fig):

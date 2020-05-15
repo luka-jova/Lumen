@@ -222,28 +222,63 @@ def measurements_to_numpy_vector(src_list):
 	"""
 	return np.array([it.realvalue for it in src_list])
 	
-manual_repairs = {
+manual_repair = {
 	"FL01" : [
 		'2018-11-13 0:0:0.0',
 		'2019-02-08 0:0:0.0',
-		'2018-02-12 0:0:0.0',
+		'2019-02-14 0:0:0.0', ##chosen end date
 	],
 	"FL02" : [
-		'2019-04-02 0:0:0.0'
+		'2019-04-08 0:0:0.0' #end date
 	],
 	"FL03" : [
-		'2019-04-02 0:0:0.0'
+		'2019-04-08 0:0:0.0', #end date
+		'2019-04-05 0:0:0.0'
 	],
 	"FL04" : [],
 	"FL05" : [],
 	"FL06" : [],
 	"FL07" : [
-		'2019-04-02 0:0:0.0'
-	],
-	"debug-machine" :  [
-		'2019-04-02 0:0:0.0'
+		'2019-04-08 0:0:0.0'
 	]
 }
+
+list_V_sensors = [
+	"drive_gear_V_eff",
+	"drive_motor_V_eff",
+	"drive_wheel_V_eff",
+	"idle_wheel_V_eff",
+	"lifting_gear_V_eff",
+	"lifting_motor_V_eff"
+]
+
+
+list_a_sensors = [
+	"drive_gear_a_max",
+	"drive_motor_a_max",
+	"drive_wheel_a_max",
+	"idle_wheel_a_max",
+	"lifting_gear_a_max",
+	"lifting_motor_a_max"
+]
+
+list_debug_sensors = [
+	"drive_gear_V_eff",
+	"drive_wheel_V_eff"
+]
+
+list_sensors = {
+	"FL01": list_V_sensors + list_a_sensors,
+	"FL02": list_V_sensors + list_a_sensors,
+	"FL03": list_V_sensors + list_a_sensors,
+	"FL04": list_V_sensors + list_a_sensors,
+	"FL05": list_V_sensors + list_a_sensors,
+	"FL06": list_V_sensors + list_a_sensors,
+	"FL07": list_V_sensors + list_a_sensors,
+	"debug-machine": list_debug_sensors
+}
+
+list_machines = ["FL01", "FL02", "FL03", "FL04", "FL05", "FL06", "FL07", "debug-machine"]
 
 def getRepairs(machine_name):
 	return manual_repairs[ machine_name ]
