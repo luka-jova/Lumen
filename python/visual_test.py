@@ -69,28 +69,6 @@ PlotCon
 
 manual_repair = data_filter.manual_repair
 
-<<<<<<< HEAD
-manual_repair = {
-	"FL01" : [
-		'2018-11-13 0:0:0.0',
-		'2019-02-08 0:0:0.0',
-		'2019-02-12 0:0:0.0',
-	],
-	"FL02" : [
-		'2019-04-02 0:0:0.0'
-	],
-	"FL03" : [
-		'2019-04-02 0:0:0.0'
-	],
-	"FL04" : [],
-	"FL05" : [],
-	"FL06" : [],
-	"FL07" : [
-		'2019-04-02 0:0:0.0'
-	]
-}
-=======
->>>>>>> ab502da861c5ee732f13dc7517ccf24f39d1e383
 # Gets data from data folder
 
 
@@ -283,21 +261,12 @@ def Plot(data = [], machine = None, sensors = [], **kwargs):
 		Plot1d(to_plot, **kwargs)
 	elif datatype == '2d':
 		Plot2d(to_plot, **kwargs)
-<<<<<<< HEAD
 
-	'''
-	repair = kwargs.get('repair', machine)
-	if repair:
-		for when in manual_repair[repair]:
-			plt.axvline(x=when, color="black", linestyle="--")
-	'''
-=======
-	
-	if machine:
+	kind = kwargs.get('kind', None)
+	if machine and kind != scatter:
 		for when in manual_repair[machine]:
 			plt.axvline(x=when, color="black", linestyle="--")
-	
->>>>>>> ab502da861c5ee732f13dc7517ccf24f39d1e383
+
 	M.refresh()
 
 def ax(fig):
