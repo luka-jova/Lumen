@@ -5,14 +5,17 @@ from datetime import datetime
 import obrada
 import data_filter
 from measurement import Measurement
+import matplotlib
 
-
-RECOMMENDED_MATPLOTLIB_BACKEND = "TkAgg"
-if matplotlib.get_backend() != RECOMMENDED_MATPLOTLIB_BACKEND:
-	print("Setting up backend to TkAgg")
-	matplotlib.use(RECOMMENDED_MATPLOTLIB_BACKEND)
+matplotlib.use('TkAgg')
 
 '''
+get_ax(figure)
+get_fig(figure)
+'''
+
+'''
+
 Pass data to Plot
 1* give directly as
 	list of measurements or
@@ -26,12 +29,13 @@ ex. Plot(data = [1, 2, 3, 4])
 	Plot(machine = 'FL02', sensors = ['idle_wheel_V_eff', 'drive_wheel_a_max'])
 
 additional arguments:
-	figure	- positive integer specifies figure to plot on
+	figure	- label
 	name	- give name to current data
 	feature - 'rol-mean', 'rol-skew', 'rol-std'
 			- this is used for plotting sensors or list of measurements
 	window  - size of rolling window for rolling features (default is '10d' meaning 10 days)
 	kind = 'scatter', 'hist', 'line', 'density' ...
+	legend - True or False
 
 	additional arguments for:
 		* kind = 'scatter':
@@ -67,7 +71,7 @@ manual_repair = {
 	"FL01" : [
 		'2018-11-13 0:0:0.0',
 		'2019-02-08 0:0:0.0',
-		'2018-02-12 0:0:0.0',
+		'2019-02-12 0:0:0.0',
 	],
 	"FL02" : [
 		'2019-04-02 0:0:0.0'
@@ -126,9 +130,14 @@ features = {
 }
 
 def ApplyFeature(data, feature, window):
-	features[feature](data, window)
+	if len(data.columns) > 1:
+		data.set_index(data.columns[0], inplace = True)
+		features[feature](data, window)
+		data.reset_index(inplace = True)
+	else:
+		features[feature](data, window)
 
-def Convert_dates(L, y = 'unknown'):
+def Convert_measurements(L, y = 'unknown'):
 	res = pd.DataFrame(columns = ('timestamp', 'value'))
 
 	data = []
@@ -153,12 +162,15 @@ def Plot1d(to_plot, **kwargs):
 		's'     	: kwargs.get('s', None),
 		'ls'     	: kwargs.get('ls', None),
 		'marker'    : kwargs.get('marker', None),
-		'bins'		: kwargs.get('bins', None)
+		'bins'		: kwargs.get('bins', None),
+		'legend' 	: kwargs.get('legend', None)
 	}.items() if v is not None}
 
+	feature = kwargs.get('feature', 'basic')
+	window 	= kwargs.get('window', 10)
+
 	for data in to_plot:
-		print(args)
-		print(data)
+		ApplyFeature(df, feature, window)
 		if args['kind'] in ['density', 'hist']:
 			data.plot(**args)
 		else:
@@ -177,22 +189,28 @@ def Plot2d(to_plot, **kwargs):
 		's'     	: kwargs.get('s', None),
 		'ls'     	: kwargs.get('ls', None),
 		'marker'    : kwargs.get('marker', None),
-		'gridsize'	: kwargs.get('gridsize', None)
+		'gridsize'	: kwargs.get('gridsize', None),
+		'legend' 	: kwargs.get('legend', None)
 	}.items() if v is not None}
+
+	feature = kwargs.get('feature', 'basic')
+	window 	= kwargs.get('window', 10)
+
 	if args['kind'] == 'hexbin':
 		if not 'gridsize' in args.keys():
 			args['gridsize'] = 15
 	for df in to_plot:
-		print(df)
+		ApplyFeature(df, feature, window)
 		ax = df.plot(x = df.columns[0], y = df.columns[1],  **args)
 		args['ax'] = ax
 
 def PlotTime(to_plot, **kwargs):#show_repair = True, figure = None, name = 'unknown', feature = 'basic', window = '10d', ls = None):
 
 	args = {k: v for k, v in {
-		'ax' : M.get_ax(kwargs.get('figure', -1)),
+		'ax' 		: M.get_ax(kwargs.get('figure', -1)),
 		'color' 	: kwargs.get('color', None),
-		'ls' : kwargs.get('ls', None)
+		'ls' 		: kwargs.get('ls', None),
+		'legend' 	: kwargs.get('legend', None)
 	}.items() if v is not None}
 
 	feature = kwargs.get('feature', 'basic')
@@ -203,10 +221,13 @@ def PlotTime(to_plot, **kwargs):#show_repair = True, figure = None, name = 'unkn
 		ax = df.plot(**args)
 		args['ax'] = ax
 
-	M.refresh()
-	print('Finished')
+#repair = 'what machine'
+#repair = 'FL01'
 
 def Plot(data = [], machine = None, sensors = [], **kwargs):
+
+	data = data.copy()
+
 	to_plot = []
 	datatype = None
 
@@ -225,7 +246,7 @@ def Plot(data = [], machine = None, sensors = [], **kwargs):
 	elif len(data):
 		name = kwargs.get('name', 'unknown')
 		print('Plotting data...')
-		if isinstance(data[0], Measurement): 
+		if isinstance(data, list) and isinstance(data[0], Measurement):
 			datatype = "TIME"
 			to_plot.append(Convert_measurements(data, name, feature))
 		else:
@@ -250,16 +271,36 @@ def Plot(data = [], machine = None, sensors = [], **kwargs):
 	elif datatype == '2d':
 		Plot2d(to_plot, **kwargs)
 
+	repair = kwargs.get('repair', machine)
+	if repair:
+		for when in manual_repair[repair]:
+			plt.axvline(x=when, color="black", linestyle="--")
+
 	M.refresh()
 
+def ax(fig):
+	return M.get_ax(fig)
+def fig(fig)
+	return M.get_fig(fig)
+
 class Manager:
+	figs = {}
+
 	def __init__(self):
 		plt.close('all')
 	def get_ax(self, fig):
-		if fig not in plt.get_fignums():
+		if self.figs.get(fig, None) not in plt.get_fignums():
+			L = [0] + plt.get_fignums()
+			self.figs[fig] = L[-1] + 1
 			return None
-		return plt.figure(fig).get_axes()[0]
+		return plt.figure(self.figs.get(fig, fig)).get_axes()[0]
+	def get_fig(self, fig):
+		if fig not in self.figs:
+			return None
+		return plt.figure(self.figs.get(fig, fig))
 	def refresh(self):
+		for title in self.figs:
+			self.get_fig(title).canvas.set_window_title(title)
 		plt.show(block = False)
 
 M = Manager()
@@ -294,4 +335,3 @@ def Plot_data(machine = 'FL01', sensor = obrada.list_sensors['FL01'][2]):
 	data.set_index([x], inplace = True)
 
 	return data
-
