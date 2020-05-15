@@ -6,41 +6,10 @@ from numpy import inf
 
 CUR_MACHINE = "FL01"
 CUR_SENSOR = "drive_gear_V_eff"
-list_V_sensors = [
-	"drive_gear_V_eff",
-	"drive_motor_V_eff",
-	"drive_wheel_V_eff",
-	"idle_wheel_V_eff",
-	"lifting_gear_V_eff",
-	"lifting_motor_V_eff"
-]
 
+list_sensors = filter.list_sensors
+list_machines = filter.list_machines
 
-list_a_sensors = [
-	"drive_gear_a_max",
-	"drive_motor_a_max",
-	"drive_wheel_a_max",
-	"idle_wheel_a_max",
-	"lifting_gear_a_max",
-	"lifting_motor_a_max"
-]
-
-list_debug_sensors = [
-	"drive_gear_V_eff",
-	"drive_wheel_V_eff"
-]
-
-list_sensors = {
-	"FL01": list_V_sensors + list_a_sensors,
-	"FL02": list_V_sensors + list_a_sensors,
-	"FL03": list_V_sensors + list_a_sensors,
-	"FL04": list_V_sensors + list_a_sensors,
-	"FL05": list_V_sensors + list_a_sensors,
-	"FL06": list_V_sensors + list_a_sensors,
-	"FL07": list_V_sensors + list_a_sensors,
-	"debug-machine": list_debug_sensors
-}
-list_machines = ["FL01", "FL02", "FL03", "FL04", "FL05", "FL06", "FL07", "debug-machine"]
 mu = 0
 Sigma2 = []
 epsilon = 0
@@ -92,6 +61,7 @@ def plotMeasurementsDistribution(start = 0, duration = None, end = inf):
 	filter.filtered_data(meas_list, CUR_MACHINE, CUR_SENSOR, start, duration, end)
 	meas_v = filter.measurements_to_numpy_vector(meas_list)
 	vis.Plot(meas_v, kind = 'hist', bins = 100)
+
 
 def estimate(start_train = 0, duration_train = None, end_train = inf, start_outlier = 0, duration_outlier = None, end_outlier = inf):
 	global CUR_MACHINE, CUR_SENSOR, mu, Sigma2, epsilon, F1, estimated

@@ -63,26 +63,8 @@ Plot(data = [3, 2, 2.3, 3.1, 3.2, 1.2, 4, 5, 4.2], kind = 'density', ls = '--', 
 PlotCon
 '''
 
+manual_repair = data_filter.manual_repair
 
-manual_repair = {
-	"FL01" : [
-		'2018-11-13 0:0:0.0',
-		'2019-02-08 0:0:0.0',
-		'2018-02-12 0:0:0.0',
-	],
-	"FL02" : [
-		'2019-04-02 0:0:0.0'
-	],
-	"FL03" : [
-		'2019-04-02 0:0:0.0'
-	],
-	"FL04" : [],
-	"FL05" : [],
-	"FL06" : [],
-	"FL07" : [
-		'2019-04-02 0:0:0.0'
-	]
-}
 # Gets data from data folder
 
 
@@ -250,7 +232,11 @@ def Plot(data = [], machine = None, sensors = [], **kwargs):
 		Plot1d(to_plot, **kwargs)
 	elif datatype == '2d':
 		Plot2d(to_plot, **kwargs)
-
+	
+	if machine:
+		for when in manual_repair[machine]:
+			plt.axvline(x=when, color="black", linestyle="--")
+	
 	M.refresh()
 
 class Manager:
