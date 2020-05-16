@@ -114,7 +114,7 @@ def estimate(start_train = 0, duration_train = None, end_train = inf, start_outl
 def run_velocity_diagnosis():
 	print("Please select machine to be velocity diagnosed and sensor to be plotted")
 	select()
-	estim = estimator.Estimator(CUR_MACHINE, list_sensors[ CUR_MACHINE ])
+	estim = estimator.Estimator(CUR_MACHINE)
 	new_data = {}
 	for cur_sensor in list_sensors[ CUR_MACHINE ]:
 		new_data[ cur_sensor ] = []
@@ -126,7 +126,7 @@ def run():
 	print("Please select machine to be compatibility diagnosed and sensor to be plotted")
 	select()
 	plotAllMeasurementsTimeline()
-	estim = estimator.Estimator(CUR_MACHINE, list_sensors[ CUR_MACHINE ])
+	estim = estimator.Estimator(CUR_MACHINE)
 	new_data = {}
 	referent_data = {}
 	for cur_sensor in list_sensors[ CUR_MACHINE ]:
@@ -140,3 +140,6 @@ def run():
 	estim.new_data = new_data
 	estim.referent_data = referent_data
 	estim.compatibility_diagnosis()
+	
+if __name__ == "__main__":
+	run_velocity_diagnosis()

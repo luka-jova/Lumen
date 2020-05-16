@@ -4,61 +4,84 @@ from measurement import Measurement
 import anomaly_detector as ad
 import data_filter as filter
 
-class Velocity_class:
-	def __init__(self, class_name = "", min_vel = -inf, max_vel = inf, color = None):
+class Classification:
+	def __init__(self, class_name = "", min_val = -inf, max_val = inf, color = None, unit = ""):
 		self.class_name = class_name
-		self.min_vel = min_vel
-		self.max_vel = max_vel
+		self.min_val = min_val
+		self.max_val = max_val
 		self.color = color
+		self.unit = unit
 
 class Estimator:
 	####Dictionaries where key=sensor_name, val = list of Measurement objects
-	known_data = []
-	new_data = []
-	referent_data = []
+	new_data = {}
+	referent_data = {}
 	#######
-	
+	best_mu = {}
+	best_sigma2 = {}
 	
 	machine_name = ""
-	sensor_list = []
+	acc_sensor_list = []
+	vel_sensor_list = []
 	
-	def __init__(self,  machine_name, sensor_list, known_data = [], new_data = [], referent_data = []):
-		self.machine_name = machine_name
-		self.sensor_list = sensor_list.copy()
-		self.known_data = known_data.copy()
-		self.new_data = new_data.copy()
-		self.referent_data = referent_data.copy()
 	
 	###ISO 10816 classification for Class III - Large Rigid Foundations
 	#this may me modified - e.x. to Class II
 	vel_classification = [
-		Velocity_class(class_name = "Good", min_vel = 0, max_vel = 2.8, color = "g"),
-		Velocity_class(class_name = "Satisfactory", min_vel = 2.8, max_vel = 7.1, color = "c"),
-		Velocity_class(class_name = "Unsatisfactory", min_vel = 7.1, max_vel = 18.0, color = "y"),
-		Velocity_class(class_name = "Unacceptable", min_vel = 18.0, max_vel = inf, color = "r")		
+		Classification(class_name = "Good", min_val = 0, max_val = 2.8, color = "g", unit = "mm/s"),
+		Classification(class_name = "Satisfactory", min_val = 2.8, max_val = 7.1, color = "c", unit = "mm/s"),
+		Classification(class_name = "Unsatisfactory", min_val = 7.1, max_val = 18.0, color = "y", unit = "mm/s"),
+		Classification(class_name = "Unacceptable", min_val = 18.0, max_val = inf, color = "r", unit = "mm/s")		
 	]
 	
+	##Choose range...
+	acc_classification = [
+		Classification(class_name = "Good", min_val = 0, max_val = 1000, color = "g", unit = "mg"),
+		Classification(class_name = "Satisfactory", min_val = 1000, max_val = 5000, color = "c", unit = "mg"),
+		Classification(class_name = "Unsatisfactory", min_val = 5000, max_val = 10000, color = "y", unit = "mg"),
+		Classification(class_name = "Unacceptable", min_val = 10000, max_val = inf, color = "r", unit = "mg")		
+	]
+	
+	def __init__(self,  machine_name, acc_sensor_list = filter.list_a_sensors, vel_sensor_list = filter.list_V_sensors, new_data = {}, referent_data = {}):
+		self.machine_name = machine_name
+		self.acc_sensor_list = acc_sensor_list.copy()
+		self.vel_sensor_list = vel_sensor_list.copy()
+		self.new_data = new_data.copy()
+		self.referent_data = referent_data.copy()
+	
 	'''
-	returns (index, Velocity_class)
+	returns (index, Classification)
 	input can be:
 		a) Measurement 
 			-> in this case it classifies a single Measurement in vel_classification categories
 		b) list which count of how many measures there are for each category in vel_classification 
 			-> in this case it classifies the whole set of measurements
 	'''
-	def classify(self, data):
+	def classify(self, data, meas_type):
+		if meas_type not in ["a", "v"]:
+				print("measurement type is not compatibile")
+				return(0, None)
+			
 		if isinstance(data, Measurement):
 			cur_meas = data
-			for i, cur_clas in enumerate(self.vel_classification):
-				if cur_meas.realvalue >= cur_clas.min_vel and cur_meas.realvalue < cur_clas.max_vel:
-					return (i, cur_clas)
+			if meas_type == "v":
+				for i, cur_clas in enumerate(self.vel_classification):
+					if cur_meas.realvalue >= cur_clas.min_val and cur_meas.realvalue < cur_clas.max_val:
+						return (i, cur_clas)
+			elif meas_type == "a":
+				for i, cur_clas in enumerate(self.acc_classification):
+					if cur_meas.realvalue >= cur_clas.min_val and cur_meas.realvalue < cur_clas.max_val:
+						return (i, cur_clas)	
 		else:
 			cnt_categ = data
 			class_ind = -1
 			for ind, cnt in enumerate(cnt_categ):
 				if cnt > 0:
 					class_ind = ind
-			return (class_ind, self.vel_classification[ class_ind ])
+			if meas_type == "v":
+				return (class_ind, self.vel_classification[ class_ind ])
+			elif meas_type == "a":
+				return (class_ind, self.acc_classification[ class_ind ])
 		
 	
 	'''
@@ -80,17 +103,17 @@ class Estimator:
 		print("Running velocity diagnosis for machine:", self.machine_name)
 		###TODO Plot data for each sensor with marked limits of the standard
 		cnt_categ = {}
-		for cur_sensor in self.sensor_list:
+		for cur_sensor in self.vel_sensor_list:
 			cnt_categ[ cur_sensor ] = [0] * len(self.vel_classification)
 			if len(self.new_data[ cur_sensor ]) == 0 or self.new_data[cur_sensor][ 0 ].unit != "mm/s":
 				continue
 
 			for cur_meas in self.new_data[ cur_sensor ]:
-				cnt_categ[ cur_sensor ][ self.classify(cur_meas)[ 0 ] ] += 1
+				cnt_categ[ cur_sensor ][ self.classify(cur_meas, "v")[ 0 ] ] += 1
 		
 		if by_sensor:
-			for cur_sensor in self.sensor_list:
-				class_ind, cur_class = self.classify(cnt_categ[ cur_sensor ])
+			for cur_sensor in self.vel_sensor_list:
+				class_ind, cur_class = self.classify(cnt_categ[ cur_sensor ], "v")
 				
 				if class_ind == -1 or len(self.new_data[ cur_sensor ]) == 0 or self.new_data[ cur_sensor ][ 0 ].unit != "mm/s":
 					print("..", cur_sensor, ": ", sep = "", end="")
@@ -107,15 +130,16 @@ class Estimator:
 						for ind, cnt in enumerate(cnt_categ[ cur_sensor ]):
 							print("....", self.vel_classification[ ind ].class_name, "/", "all: ", sep = "", end = "")
 							print(cnt, "/", len(self.new_data[ cur_sensor ]), " = ", cnt/len(self.new_data[ cur_sensor ]), sep = "")
-
+		
+		
 		#whole machine classification
 		cnt_categ_total = [0] * len(self.vel_classification)
 		cnt_categ_total_sum = 0
-		for cur_sensor in self.sensor_list:
+		for cur_sensor in self.vel_sensor_list:
 			for ind,cnt in enumerate(cnt_categ[cur_sensor]):
 				cnt_categ_total[ ind ] += cnt
 				cnt_categ_total_sum += cnt
-		print("Machine", self.machine_name, "is working:", self.classify(cnt_categ_total)[ 1 ].class_name)
+		print("Machine", self.machine_name, "is working:", self.classify(cnt_categ_total, "v")[ 1 ].class_name)
 		if(details):
 			for ind, cnt in enumerate(cnt_categ_total):
 				print("..", self.vel_classification[ ind ].class_name, "/", "all: ", sep = "", end = "")
@@ -156,7 +180,7 @@ class Estimator:
 			
 	'''
 	def compatibility_diagnosis(self, by_sensor = True, details = True):
-		for cur_sensor in self.sensor_list:
+		for cur_sensor in self.vel_sensor_list + self.acc_sensor_list:
 			if not cur_sensor in self.new_data:
 				self.new_data[ cur_sensor ] = []
 			if not cur_sensor in self.referent_data:
@@ -164,7 +188,7 @@ class Estimator:
 		
 		if by_sensor:
 			all_good = True
-			for cur_sensor in self.sensor_list:
+			for cur_sensor in self.vel_sensor_list + self.acc_sensor_list:
 				print("Estimating sensor:", cur_sensor)
 				m_new_data = len(self.new_data[ cur_sensor ])
 				m_referent_data = len(self.referent_data[ cur_sensor ])
