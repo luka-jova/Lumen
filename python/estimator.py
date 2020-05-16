@@ -1,6 +1,8 @@
 from numpy import inf
 import numpy as np
 from measurement import Measurement
+import anomaly_detector as ad
+import data_filter as filter
 
 class Velocity_class:
 	def __init__(self, class_name = "", min_vel = -inf, max_vel = inf, color = None):
@@ -74,7 +76,7 @@ class Estimator:
 			Create Estimator object, and load the REQUIRES data.
 			velocity_diagnosis()
 	'''
-	def velocity_diagnosis(self, by_sensor = False, details = False):
+	def velocity_diagnosis(self, by_sensor = True, details = True):
 		print("Running velocity diagnosis for machine:", self.machine_name)
 		###TODO Plot data for each sensor with marked limits of the standard
 		cnt_categ = {}
@@ -119,3 +121,93 @@ class Estimator:
 				print("..", self.vel_classification[ ind ].class_name, "/", "all: ", sep = "", end = "")
 				print(cnt, "/", cnt_categ_total_sum, " = ", cnt/cnt_categ_total_sum, sep = "")
 	
+	'''
+	display_data_info
+		REQUIRES
+		DESCRIPTION
+			If data is a numpy vector, displays it's mean, standard deviation and variance
+		EXAMPLE of usage:
+			
+	'''
+	def display_data_info(self, data, data_name, pref = "..."):
+		print(pref, "Info for ", data_name, sep = "")
+		mu, sigma2 = ad.estimateGaussian(data)
+		print(pref, ".mean: ", mu, sep = "")
+		print(pref, ".std d: ", np.sqrt(sigma2), sep = "")
+		print(pref, ".variance: ", sigma2, sep = "")
+	
+	
+	'''
+	compatibility_diagnosis
+		REQUIRES these data loaded in Estimator object:
+			new_data, referent_data, machine_name, sensor_list
+		DESCRIPTION
+			Finds the estimation of measurements from referent_data 
+				and predict that measurement from new_data is "good" if it belongs to 3*std.dev. interval from its mean, which means
+				it belongs to 99.7% of referent_data, and predict that it is "outlier" otherwise. 
+				If there are more than 10% of outliers in new_data, the function will display that it is not compatibile with referent_data
+				which is considered that something has changed over time, and further analysis should be taken by expert in vibration analysis
+				or maintaince event should be performed.   
+			if by_sensor == True: Make 1d Gaussian estimation from referent_data
+				-> i.e. for each sensor make Gaussian estimation and try to fit each sensor from new_data into it
+			if by_sensor == False: Make multivariateGaussian estimation from referent_data
+				-> i.e. create new features where each example is rolling mean for some time interval, each feature corresponding to one sensor
+		EXAMPLE of usage:
+			
+	'''
+	def compatibility_diagnosis(self, by_sensor = True, details = True):
+		for cur_sensor in self.sensor_list:
+			if not cur_sensor in self.new_data:
+				self.new_data[ cur_sensor ] = []
+			if not cur_sensor in self.referent_data:
+				self.referent_data[ cur_sensor ] = []
+		
+		if by_sensor:
+			all_good = True
+			for cur_sensor in self.sensor_list:
+				print("Estimating sensor:", cur_sensor)
+				m_new_data = len(self.new_data[ cur_sensor ])
+				m_referent_data = len(self.referent_data[ cur_sensor ])
+				if m_new_data < 10 or m_referent_data < 10:
+					if details:
+						print("..too low amount of data: new_data(", m_new_data, "), referent_data(", m_referent_data, ")", sep="")
+					continue	
+				new_data_v = filter.measurements_to_numpy_vector(self.new_data[ cur_sensor ])[:, None] #m*1
+				referent_data_v = filter.measurements_to_numpy_vector(self.referent_data[ cur_sensor ])[:, None] #m*1
+				
+				mu, sigma2 = ad.estimateGaussian(referent_data_v)
+				if mu.ndim != 1:
+					print("Error dimensions")
+				epsilon = ad.multivariateGaussian((mu + 3 * np.sqrt(sigma2))[:, None], mu, sigma2) #3*std.deviation is where 99.7% of data is located
+				
+				new_data_pred = ad.multivariateGaussian(new_data_v, mu, sigma2)
+				good_cnt = sum(new_data_pred >= epsilon)
+				outlier_cnt = m_new_data - good_cnt
+				
+				if outlier_cnt / m_new_data < 0.1: #10% tolerance
+					print("..seems to FIT referent data good")
+				else:
+					print("..NOT FITTING to referent data")
+					all_good = False
+				if details:
+					print("..", good_cnt, "/", m_new_data, "=", good_cnt/m_new_data, " examples from new data FITS to referent data interval", sep = "")
+					print("..(This value should be greater than 90%)")
+					self.display_data_info(referent_data_v, "referent_data")
+					self.display_data_info(new_data_v, "new_data")
+					
+					
+				#TODO Plot distribution for referent_data and new_data on same graph for comparing	
+			#endfor
+			if all_good:
+				print("[GOOD] All sensors for", self.machine_name, "FIT to referent data.")
+			else:
+				print("[WARNING] Some sensors for", self.machine_name, "DO NOT FIT to referent data.")
+				print("Consider consulting vibration analysis expert.")
+				#TODO Messages - sto treba raditi ako se povecava / smanjuje mean value, sto treba raditi ako se povecava variance
+			
+		else:
+			print("Multivariate Gaussian not supported")
+		
+		
+		
+		
