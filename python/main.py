@@ -111,18 +111,22 @@ def estimate(start_train = 0, duration_train = None, end_train = inf, start_outl
 	print("Out of all outliers, we predicted ", cvs_outlier_cnt, "/", M_cvs_outlier, " to be outlier", sep="")
 	print("Out of all good measurements, we predicted ", cvs_good_cnt, "/", M_cvs_good, " to be good", sep = "")	
 
-def run_velocity_diagnosis():
-	print("Please select machine to be velocity diagnosed and sensor to be plotted")
+
+###EXAMPLE FUNCTIONS
+def run_category_diagnosis():
+	print("Please select machine to be category diagnosed and sensor to be plotted")
 	select()
+	plotAllMeasurementsTimeline()
 	estim = estimator.Estimator(CUR_MACHINE)
 	new_data = {}
 	for cur_sensor in list_sensors[ CUR_MACHINE ]:
 		new_data[ cur_sensor ] = []
 		filter.filtered_data(new_data[ cur_sensor ], CUR_MACHINE, cur_sensor)
 	estim.new_data = new_data
-	estim.velocity_diagnosis()
+	estim.category_diagnosis("v")
+	estim.category_diagnosis("a")
 	
-def run():
+def run_compatibility_diagnosis():
 	print("Please select machine to be compatibility diagnosed and sensor to be plotted")
 	select()
 	plotAllMeasurementsTimeline()
@@ -139,7 +143,8 @@ def run():
 	vis.Plot(filter.measurements_to_numpy_vector(new_data[ CUR_SENSOR ]), kind = "density")
 	estim.new_data = new_data
 	estim.referent_data = referent_data
-	estim.compatibility_diagnosis()
+	estim.compatibility_diagnosis(use_best_data = False)
 	
 if __name__ == "__main__":
-	run_velocity_diagnosis()
+	#run_velocity_diagnosis()
+	run()

@@ -17,8 +17,23 @@ class Estimator:
 	new_data = {}
 	referent_data = {}
 	#######
-	best_mu = {}
-	best_sigma2 = {}
+	
+	'''
+	The next data should be loaded from .config file and not changed after the creation of estimator object
+	best_mu -> dictionary where key=sensor_name, val = numpy vector with one element
+	best_sigma2 -> dictionary where key=sensor_name, val = numpy vector with one element
+	machine_name
+	acc_sensor_list
+	vel_sensor_list
+	vel_classification
+	acc_classification
+	'''
+	best_mu = {
+		"lifting_motor_a_max": np.array([100.4])
+	}
+	best_sigma2 = {
+		"lifting_motor_a_max": np.array([1298708.6737446])	
+	}
 	
 	machine_name = ""
 	acc_sensor_list = []
@@ -36,10 +51,15 @@ class Estimator:
 	
 	##Choose range...
 	acc_classification = [
-		Classification(class_name = "Good", min_val = 0, max_val = 1000, color = "g", unit = "mg"),
-		Classification(class_name = "Satisfactory", min_val = 1000, max_val = 5000, color = "c", unit = "mg"),
-		Classification(class_name = "Unsatisfactory", min_val = 5000, max_val = 10000, color = "y", unit = "mg"),
-		Classification(class_name = "Unacceptable", min_val = 10000, max_val = inf, color = "r", unit = "mg")		
+		#Classification(class_name = "Good", min_val = 0, max_val = 1000, color = "g", unit = "mg"),
+		#Classification(class_name = "Satisfactory", min_val = 1000, max_val = 5000, color = "c", unit = "mg"),
+		#Classification(class_name = "Unsatisfactory", min_val = 5000, max_val = 10000, color = "y", unit = "mg"),
+		#Classification(class_name = "Unacceptable", min_val = 10000, max_val = inf, color = "r", unit = "mg")		
+	
+		Classification(class_name = "Brado", min_val = 0, max_val = 500, color = "g", unit = "mg"),
+		Classification(class_name = "Oke", min_val = 500, max_val = 1000, color = "c", unit = "mg"),
+		Classification(class_name = "A_ono", min_val = 1000, max_val = 10000, color = "y", unit = "mg"),
+		Classification(class_name = "Kurcina", min_val = 10000, max_val = inf, color = "r", unit = "mg")		
 	]
 	
 	def __init__(self,  machine_name, acc_sensor_list = filter.list_a_sensors, vel_sensor_list = filter.list_V_sensors, new_data = {}, referent_data = {}):
@@ -85,41 +105,56 @@ class Estimator:
 		
 	
 	'''
-	velocity_diagnosis 
+	category_diagnosis 
 		REQUIRES these data loaded in Estimator object:
-			machine_name, sensor_list, new_data, vel_classification
+			machine_name, (acc_sensor_list or vel_sensor_list), new_data, (acc_classification or vel_classification)
 		DESCRIPTION:
 			Run velocity diagnosis for the machine.
 			For each sensor there is some referent vibration interval that the sensor should be in, and some interval that
 				it must not exceed	
-			For each sensor, all measurements from new_data are classified into vel_classification classes
+			For each sensor, all measurements from new_data are classified into meas_classification classes
 			if by_sensor == True: Display classification for each sensor separately
 			if details == True: Display details
+			
+			if meas_type == "a": run category_diagnosis for all available acceleration sensors using acc_classification classifier
+			if meas_type == "v": run category_diagnosis for all available velocity sensors using vel_classification classifier
 		EXAMPLE of usage:
 			Create Estimator object, and load the REQUIRES data.
-			velocity_diagnosis()
+			category_diagnosis(meas_type = "a") or category_diagnosis(meas_type = "v")
 	'''
-	def velocity_diagnosis(self, by_sensor = True, details = True):
-		print("Running velocity diagnosis for machine:", self.machine_name)
+	def category_diagnosis(self, meas_type, by_sensor = True, details = True):
+		if meas_type not in ["a", "v"]:
+			print("Wrong measure type")
+			return
+		if(meas_type == "a"):
+			print("Running acceleration diagnosis for machine:", self.machine_name)			
+			sensor_list = self.acc_sensor_list
+			meas_classification = self.acc_classification
+		else:
+			print("Running velocity diagnosis for machine:", self.machine_name)
+			sensor_list = self.vel_sensor_list
+			meas_classification = self.vel_classification
+			
 		###TODO Plot data for each sensor with marked limits of the standard
 		cnt_categ = {}
-		for cur_sensor in self.vel_sensor_list:
-			cnt_categ[ cur_sensor ] = [0] * len(self.vel_classification)
-			if len(self.new_data[ cur_sensor ]) == 0 or self.new_data[cur_sensor][ 0 ].unit != "mm/s":
+		
+		for cur_sensor in sensor_list:
+			cnt_categ[ cur_sensor ] = [0] * len(meas_classification)
+			if len(self.new_data[ cur_sensor ]) == 0:
 				continue
 
 			for cur_meas in self.new_data[ cur_sensor ]:
-				cnt_categ[ cur_sensor ][ self.classify(cur_meas, "v")[ 0 ] ] += 1
+				cnt_categ[ cur_sensor ][ self.classify(cur_meas, meas_type)[ 0 ] ] += 1
 		
 		if by_sensor:
-			for cur_sensor in self.vel_sensor_list:
-				class_ind, cur_class = self.classify(cnt_categ[ cur_sensor ], "v")
+			for cur_sensor in sensor_list:
+				class_ind, cur_class = self.classify(cnt_categ[ cur_sensor ], meas_type)
 				
-				if class_ind == -1 or len(self.new_data[ cur_sensor ]) == 0 or self.new_data[ cur_sensor ][ 0 ].unit != "mm/s":
+				if class_ind == -1 or len(self.new_data[ cur_sensor ]) == 0:
 					print("..", cur_sensor, ": ", sep = "", end="")
 					print("N/A")
 					if(details):
-						print("....no data or acceleration sensor")
+						print("....no data")
 					else:
 						print()
 				else:
@@ -128,22 +163,24 @@ class Estimator:
 					
 					if(details):
 						for ind, cnt in enumerate(cnt_categ[ cur_sensor ]):
-							print("....", self.vel_classification[ ind ].class_name, "/", "all: ", sep = "", end = "")
+							print("....", meas_classification[ ind ].class_name, "/", "all: ", sep = "", end = "")
 							print(cnt, "/", len(self.new_data[ cur_sensor ]), " = ", cnt/len(self.new_data[ cur_sensor ]), sep = "")
 		
 		
 		#whole machine classification
-		cnt_categ_total = [0] * len(self.vel_classification)
+		cnt_categ_total = [0] * len(meas_classification)
 		cnt_categ_total_sum = 0
-		for cur_sensor in self.vel_sensor_list:
+		for cur_sensor in sensor_list:
 			for ind,cnt in enumerate(cnt_categ[cur_sensor]):
 				cnt_categ_total[ ind ] += cnt
 				cnt_categ_total_sum += cnt
-		print("Machine", self.machine_name, "is working:", self.classify(cnt_categ_total, "v")[ 1 ].class_name)
+		print("Machine", self.machine_name, "is working:", self.classify(cnt_categ_total, meas_type)[ 1 ].class_name)
 		if(details):
 			for ind, cnt in enumerate(cnt_categ_total):
-				print("..", self.vel_classification[ ind ].class_name, "/", "all: ", sep = "", end = "")
+				print("..", meas_classification[ ind ].class_name, "/", "all: ", sep = "", end = "")
 				print(cnt, "/", cnt_categ_total_sum, " = ", cnt/cnt_categ_total_sum, sep = "")
+	
+	
 	
 	'''
 	display_data_info
@@ -164,7 +201,9 @@ class Estimator:
 	'''
 	compatibility_diagnosis
 		REQUIRES these data loaded in Estimator object:
-			new_data, referent_data, machine_name, sensor_list
+			new_data, machine_name, sensor_list
+			referent_data or (best_mu and best_sigma2)
+			
 		DESCRIPTION
 			Finds the estimation of measurements from referent_data 
 				and predict that measurement from new_data is "good" if it belongs to 3*std.dev. interval from its mean, which means
@@ -176,62 +215,78 @@ class Estimator:
 				-> i.e. for each sensor make Gaussian estimation and try to fit each sensor from new_data into it
 			if by_sensor == False: Make multivariateGaussian estimation from referent_data
 				-> i.e. create new features where each example is rolling mean for some time interval, each feature corresponding to one sensor
+			if use_best_data == False: Make estimation from referent_data
+			if use_best_data == True: Use best_mu and best_sigma2 as estimations
 		EXAMPLE of usage:
-			
 	'''
-	def compatibility_diagnosis(self, by_sensor = True, details = True):
+	def compatibility_diagnosis(self, details = True, use_best_data = False):
+		mu = {}
+		sigma2 = {}
 		for cur_sensor in self.vel_sensor_list + self.acc_sensor_list:
 			if not cur_sensor in self.new_data:
 				self.new_data[ cur_sensor ] = []
 			if not cur_sensor in self.referent_data:
 				self.referent_data[ cur_sensor ] = []
 		
-		if by_sensor:
-			all_good = True
+		if use_best_data:
+			mu = self.best_mu.copy()
+			sigma2 = self.best_sigma2.copy()
+		else:
+			#need to estimate data from referent_data			
 			for cur_sensor in self.vel_sensor_list + self.acc_sensor_list:
 				print("Estimating sensor:", cur_sensor)
-				m_new_data = len(self.new_data[ cur_sensor ])
 				m_referent_data = len(self.referent_data[ cur_sensor ])
-				if m_new_data < 10 or m_referent_data < 10:
-					if details:
-						print("..too low amount of data: new_data(", m_new_data, "), referent_data(", m_referent_data, ")", sep="")
-					continue	
-				new_data_v = filter.measurements_to_numpy_vector(self.new_data[ cur_sensor ])[:, None] #m*1
+				if m_referent_data < 10:
+					print("..too low amount of data: new_data(", m_new_data, "), referent_data(", m_referent_data, ")", sep="")
+					continue
 				referent_data_v = filter.measurements_to_numpy_vector(self.referent_data[ cur_sensor ])[:, None] #m*1
-				
-				mu, sigma2 = ad.estimateGaussian(referent_data_v)
-				if mu.ndim != 1:
+				ref_mu, ref_sigma2 = ad.estimateGaussian(referent_data_v)
+				if ref_mu.size != 1 or ref_sigma2.size != 1:
 					print("Error dimensions")
-				epsilon = ad.multivariateGaussian((mu + 3 * np.sqrt(sigma2))[:, None], mu, sigma2) #3*std.deviation is where 99.7% of data is located
-				
-				new_data_pred = ad.multivariateGaussian(new_data_v, mu, sigma2)
-				good_cnt = sum(new_data_pred >= epsilon)
-				outlier_cnt = m_new_data - good_cnt
-				
-				if outlier_cnt / m_new_data < 0.1: #10% tolerance
-					print("..seems to FIT referent data good")
-				else:
-					print("..NOT FITTING to referent data")
-					all_good = False
+				mu[ cur_sensor ] = ref_mu
+				sigma2[ cur_sensor ] = ref_sigma2
+		##estimation done
+		
+		all_good = True
+		for cur_sensor in self.vel_sensor_list + self.acc_sensor_list:
+			if cur_sensor not in mu or cur_sensor not in sigma2:
+				print("Skipping", cur_sensor)
+				continue
+			print("Diagnosing sensor", cur_sensor)
+			m_new_data = len(self.new_data[ cur_sensor ])
+			if m_new_data < 10:
 				if details:
-					print("..", good_cnt, "/", m_new_data, "=", good_cnt/m_new_data, " examples from new data FITS to referent data interval", sep = "")
-					print("..(This value should be greater than 90%)")
-					self.display_data_info(referent_data_v, "referent_data")
-					self.display_data_info(new_data_v, "new_data")
-					
-					
-				#TODO Plot distribution for referent_data and new_data on same graph for comparing	
-			#endfor
-			if all_good:
-				print("[GOOD] All sensors for", self.machine_name, "FIT to referent data.")
-			else:
-				print("[WARNING] Some sensors for", self.machine_name, "DO NOT FIT to referent data.")
-				print("Consider consulting vibration analysis expert.")
-				#TODO Messages - sto treba raditi ako se povecava / smanjuje mean value, sto treba raditi ako se povecava variance
+					print("..too low amount of data: new_data(", m_new_data, "), referent_data(", m_referent_data, ")", sep="")
+				continue	
+			new_data_v = filter.measurements_to_numpy_vector(self.new_data[ cur_sensor ])[:, None] #m*1
 			
+			cur_mu = mu[ cur_sensor ]
+			cur_sigma2 = sigma2[ cur_sensor ]
+			
+			epsilon = ad.multivariateGaussian((cur_mu + 3 * np.sqrt(cur_sigma2))[:, None], np.array([cur_mu]), np.array([cur_sigma2])) #3*std.deviation is where 99.7% of data is located
+			
+			new_data_pred = ad.multivariateGaussian(new_data_v, cur_mu, cur_sigma2)
+			good_cnt = sum(new_data_pred >= epsilon)
+			outlier_cnt = m_new_data - good_cnt
+			
+			if outlier_cnt / m_new_data < 0.1: #10% tolerance
+				print("..FITTING to referent data good")
+			else:
+				print("..NOT FITTING to referent data")
+				all_good = False
+			if details:
+				print("..", good_cnt, "/", m_new_data, "=", good_cnt/m_new_data, " examples from new data FITS to referent data interval", sep = "")
+				print("..(This value should be greater than 90%)")
+				print(cur_sensor, "\n.referent data\n", "..mu: ", cur_mu, "\n..std.dev.: ", np.sqrt(cur_sigma2), "\n..variance: ", cur_sigma2, sep="")
+				self.display_data_info(new_data_v, "new_data")
+				
+				
+			#TODO Plot distribution for referent_data and new_data on same graph for comparing	
+		#endfor
+		if all_good:
+			print("[GOOD] All sensors for", self.machine_name, "FIT to referent data.")
 		else:
-			print("Multivariate Gaussian not supported")
-		
-		
-		
+			print("[WARNING] Some sensors for", self.machine_name, "DO NOT FIT to referent data.")
+			print("Consider consulting vibration analysis expert.")
+			#TODO Messages - sto treba raditi ako se povecava / smanjuje mean value, sto treba raditi ako se povecava variance
 		
