@@ -62,6 +62,39 @@ class Estimator:
 		Classification(class_name = "Kurcina", min_val = 10000, max_val = inf, color = "r", unit = "mg")		
 	]
 	
+	'''
+	###################
+	#DIAGNOSIS DETAILS#
+	###################
+	'''
+	RUN_V_CATEGORIZATION = True
+	RUN_A_CATEGORIZATION = True
+	RUN_CATEGORIZATION_NEW_DATA = True
+	RUN_CATEGORIZATION_ALL_DATA = True
+	
+	RUN_COMPATIBILITY_LAST_DAY = True 
+	#if new_data is in intervl [start, end], then referent_data will become [start - 24:00:00, end - 24:00:00]
+	RUN_COMPATIBILITY_LAST_WEEK = True
+	#if new_data is in intervl [start, end], then referent_data will become [start - 24:00:00 * 7, end - 24:00:00 * 7]
+	RUN_COMPATIBILITY_LAST_N_DAYS = True
+	REFERENT_LAST_N_DAYS = 30
+	#if new_data is in intervl [start, end], then referent_data will become [start - 24:00:00 * REFERENT_LAST_N_DAYS, end - 24:00:00 * REFERENT_LAST_N_DAYS]
+	
+	RUN_COMPATIBILITY_BEST_FIT = True
+	#Try fitting new_data to Gaussian distribution provided with (best_mu, best_sigma2)
+	
+	FIND_MIN_MEAN = True
+	MIN_MEAN_WINDOW = 14 
+	#Find minimum rolling mean value. Rolling mean has MIN_MEAN_WINDOW DAYS of window
+	
+	#
+		
+	'''
+	##########################
+	#END of DIAGNOSIS DETAILS#
+	##########################
+	'''
+	
 	def __init__(self,  machine_name, acc_sensor_list = filter.list_a_sensors, vel_sensor_list = filter.list_V_sensors, new_data = {}, referent_data = {}):
 		self.machine_name = machine_name
 		self.acc_sensor_list = acc_sensor_list.copy()
@@ -237,7 +270,7 @@ class Estimator:
 				print("Estimating sensor:", cur_sensor)
 				m_referent_data = len(self.referent_data[ cur_sensor ])
 				if m_referent_data < 10:
-					print("..too low amount of data: new_data(", m_new_data, "), referent_data(", m_referent_data, ")", sep="")
+					print("..too low amount of data: referent_data(", m_referent_data, ")", sep="")
 					continue
 				referent_data_v = filter.measurements_to_numpy_vector(self.referent_data[ cur_sensor ])[:, None] #m*1
 				ref_mu, ref_sigma2 = ad.estimateGaussian(referent_data_v)
@@ -256,7 +289,7 @@ class Estimator:
 			m_new_data = len(self.new_data[ cur_sensor ])
 			if m_new_data < 10:
 				if details:
-					print("..too low amount of data: new_data(", m_new_data, "), referent_data(", m_referent_data, ")", sep="")
+					print("..too low amount of data: new_data(", m_new_data, ")", sep="")
 				continue	
 			new_data_v = filter.measurements_to_numpy_vector(self.new_data[ cur_sensor ])[:, None] #m*1
 			

@@ -5,11 +5,113 @@ import numpy as np
 from numpy import inf
 import estimator
 
-CUR_MACHINE = "FL01"
-CUR_SENSOR = "drive_gear_V_eff"
-
 list_sensors = filter.list_sensors
 list_machines = filter.list_machines
+
+'''
+run function
+UI calls this function with provided estimator
+e - Estimator object that has all the configuration details:
+	
+	-what should be diagnosed
+	ARGUMENTS:
+		e - loaded Estimator object from .config file	
+		start - float representing global time in seconds for the start of new_data
+		end - float representing global time in seconds for the end of new_data
+		mode - "Terminal" or "PDF" - representing the exporting mode
+		showDetails - if True: show details for each operation, if False: don't
+		 
+'''
+
+Messages = {
+
+	"RUN_A_CATEGORIZATION": {}
+
+}
+
+def run(e, details = True, mode = "Terminal", start = 0.0, end = 0.0):
+	
+	if isinstance(start, str):
+		start = filter.to_timestamp(start)
+	if isinstance(end, str):
+		end = filter.to_timestamp(end)
+	
+	if e.RUN_A_CATEGORIZATION and e.RUN_CATEGORIZATION_ALL_DATA:
+		print("-------Categorization of acceleration for all data---------")
+		new_data = {}
+		load_data(new_data, e.machine_name, e.acc_sensor_list, start = 0, end = inf)
+		e.new_data = new_data
+		e.category_diagnosis("a", details = details)
+		
+	if e.RUN_A_CATEGORIZATION and e.RUN_CATEGORIZATION_NEW_DATA:
+		print("-------Categorization of acceleration for new data---------")
+		new_data = {}
+		load_data(new_data, e.machine_name, e.acc_sensor_list, start = start, end = end)
+		e.new_data = new_data
+		e.category_diagnosis("a", details = details)
+		
+	if e.RUN_V_CATEGORIZATION and e.RUN_CATEGORIZATION_ALL_DATA:
+		print("-------Categorization of velocity for all data---------")
+		new_data = {}
+		load_data(new_data, e.machine_name, e.vel_sensor_list, start = 0, end = inf)
+		e.new_data = new_data
+		e.category_diagnosis("v", details = details)
+	
+	if e.RUN_V_CATEGORIZATION and e.RUN_CATEGORIZATION_NEW_DATA:
+		print("-------Categorization of velocity for new data---------")
+		new_data = {}
+		load_data(new_data, e.machine_name, e.vel_sensor_list, start = start, end = end)
+		e.new_data = new_data
+		e.category_diagnosis("v", details = details)
+
+	if e.RUN_COMPATIBILITY_LAST_DAY:
+		print("------Checking compatibility with last day-----------")
+		referent_data = {}
+		load_data(referent_data, e.machine_name, e.vel_sensor_list + e.acc_sensor_list, start = start - 24*60*60, end = start)
+		e.referent_data = referent_data
+		new_data = {}
+		load_data(new_data, e.machine_name, e.vel_sensor_list + e.acc_sensor_list, start = start, end = end)
+		e.new_data = new_data
+		e.compatibility_diagnosis(details = details, use_best_data = False)
+	
+	if e.RUN_COMPATIBILITY_LAST_WEEK:
+		print("------Checking compatibility with last week-----------")
+		referent_data = {}
+		load_data(referent_data, e.machine_name, e.vel_sensor_list + e.acc_sensor_list, start = start - 7*24*60*60, end = start)
+		e.referent_data = referent_data
+		new_data = {}
+		load_data(new_data, e.machine_name, e.vel_sensor_list + e.acc_sensor_list, start = start, end = end)
+		e.new_data = new_data
+		e.compatibility_diagnosis(details = details, use_best_data = False)
+	
+	if e.RUN_COMPATIBILITY_LAST_N_DAYS:
+		print("------Checking compatibility with last", e.REFERENT_LAST_N_DAYS, "days-----------")
+		referent_data = {}
+		load_data(referent_data, e.machine_name, e.vel_sensor_list + e.acc_sensor_list, start = start - e.REFERENT_LAST_N_DAYS*24*60*60, end = start)
+		e.referent_data = referent_data
+		new_data = {}
+		load_data(new_data, e.machine_name, e.vel_sensor_list + e.acc_sensor_list, start = start, end = end)
+		e.new_data = new_data
+		e.compatibility_diagnosis(details = details, use_best_data = False)
+	
+	if e.RUN_COMPATIBILITY_BEST_FIT:
+		print("------Checking compatibility with best fit------------")
+		new_data = {}
+		load_data(new_data, e.machine_name, e.vel_sensor_list + e.acc_sensor_list, start = start, end = end)
+		e.new_data = new_data
+		e.compatibility_diagnosis(details = details, use_best_data = True)
+		
+		
+
+def load_data(new_data, machine_name, sensor_list, start, end):
+	for cur_sensor in sensor_list:
+		new_data[ cur_sensor ] = []
+		filter.filtered_data(new_data[ cur_sensor ], machine_name, cur_sensor, start, None, end)
+	
+
+#######NEPOTREBNO KASNIJE
+CUR_MACHINE = "FL01"
+CUR_SENSOR = "drive_gear_V_eff"
 
 mu = 0
 Sigma2 = []
