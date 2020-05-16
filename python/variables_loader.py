@@ -2,7 +2,7 @@ from ast import literal_eval
 
 CONFIG_FILE_PATH = ".config"
 
-def keep_primitives(from_dict, which=None, keep_types=(str, int, float, dict, set, list)):
+def keep_primitives(from_dict, which=None, keep_types=(str, int, float, dict, set, list, tuple, bool)):
 	"""Helper function for filtering variables to load or store
 	
 	Filters out those variables whose type isn't in keep_types or name is like __*__.
