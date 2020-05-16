@@ -10,6 +10,8 @@ import matplotlib
 
 matplotlib.use('TkAgg')
 
+# u test.py su primjeri nekih poziva
+
 '''
 get_ax(figure)
 get_fig(figure)
@@ -158,7 +160,6 @@ def Plot1d(to_plot, **kwargs):
 			data.plot(**args)
 		else:
 			data['y'] = 0
-			args['kind'] = 'scatter'
 			if not 's' in args.keys():
 				args['s'] = 30
 			data.plot(x = data.columns[0], y = data.columns[1], **args)
@@ -184,8 +185,6 @@ def Plot2d(to_plot, **kwargs):
 			args['gridsize'] = 15
 	for df in to_plot:
 		ApplyFeature(df, feature, window)
-		print(df)
-		print(args)
 		ax = df.plot(x = df.columns[0], y = df.columns[1],  **args)
 		args['ax'] = ax
 
@@ -239,7 +238,7 @@ def Plot(data = [], machine = None, sensors = [], **kwargs):
 		print('Plotting data...')
 		if isinstance(data, list) and isinstance(data[0], Measurement):
 			datatype = "TIME"
-			to_plot.append(Convert_measurements(data, name, feature))
+			to_plot.append(Convert_measurements(data, name))
 		else:
 			data = pd.DataFrame(data)
 			if len(data.columns) == 1:
@@ -282,6 +281,10 @@ class Manager:
 	def get_ax(self, fig):
 		if self.figs.get(fig, None) not in plt.get_fignums():
 			L = [0] + plt.get_fignums()
+			if fig == -1:
+				fig = 1
+				while fig in self.figs.keys():
+					fig += 1
 			self.figs[fig] = L[-1] + 1
 			return None
 		return plt.figure(self.figs.get(fig, fig)).get_axes()[0]
