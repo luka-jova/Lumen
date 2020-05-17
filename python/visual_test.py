@@ -10,6 +10,8 @@ import matplotlib
 
 matplotlib.use('TkAgg')
 
+# u test.py su primjeri nekih poziva
+
 '''
 get_ax(figure)
 get_fig(figure)
@@ -152,12 +154,11 @@ def Plot1d(to_plot, **kwargs):
 	window 	= kwargs.get('window', 10)
 
 	for data in to_plot:
-		ApplyFeature(df, feature, window)
+		ApplyFeature(data, feature, window)
 		if args['kind'] in ['density', 'hist']:
 			data.plot(**args)
 		else:
 			data['y'] = 0
-			args['kind'] = 'scatter'
 			if not 's' in args.keys():
 				args['s'] = 30
 			data.plot(x = data.columns[0], y = data.columns[1], **args)
@@ -190,7 +191,9 @@ def PlotTime(to_plot, **kwargs):#show_repair = True, figure = None, name = 'unkn
 
 	args = {k: v for k, v in {
 		'ax' 		: M.get_ax(kwargs.get('figure', -1)),
+		's'     	: kwargs.get('s', None),
 		'color' 	: kwargs.get('color', None),
+		'kind'		: kwargs.get('kind', 'line'),
 		'ls' 		: kwargs.get('ls', None),
 		'legend' 	: kwargs.get('legend', None)
 	}.items() if v is not None}
@@ -200,6 +203,10 @@ def PlotTime(to_plot, **kwargs):#show_repair = True, figure = None, name = 'unkn
 
 	for df in to_plot:
 		ApplyFeature(df, feature, window)
+		if args['kind'] == 'scatter':
+			df.reset_index(inplace = True)
+			args['x'] = df.columns[0]
+			args['y'] = df.columns[1]
 		ax = df.plot(**args)
 		args['ax'] = ax
 
@@ -222,7 +229,7 @@ def Plot(data = [], machine = None, sensors = [], **kwargs):
 		for sensor in sensors:
 			temp = []
 			data_filter.filtered_data(temp, machine, sensor)
-			temp = Convert_dates(temp, f'{machine} - {sensor}')
+			temp = Convert_measurements(temp, f'{machine} - {sensor}')
 			print(f'{machine} - {sensor}')
 			to_plot.append(temp)
 	elif len(data):
@@ -230,7 +237,7 @@ def Plot(data = [], machine = None, sensors = [], **kwargs):
 		print('Plotting data...')
 		if isinstance(data, list) and isinstance(data[0], Measurement):
 			datatype = "TIME"
-			to_plot.append(Convert_measurements(data, name, feature))
+			to_plot.append(Convert_measurements(data, name))
 		else:
 			data = pd.DataFrame(data)
 			if len(data.columns) == 1:
@@ -262,7 +269,7 @@ def Plot(data = [], machine = None, sensors = [], **kwargs):
 
 def ax(fig):
 	return M.get_ax(fig)
-def fig(fig)
+def fig(fig):
 	return M.get_fig(fig)
 
 class Manager:
@@ -273,6 +280,10 @@ class Manager:
 	def get_ax(self, fig):
 		if self.figs.get(fig, None) not in plt.get_fignums():
 			L = [0] + plt.get_fignums()
+			if fig == -1:
+				fig = 1
+				while fig in self.figs.keys():
+					fig += 1
 			self.figs[fig] = L[-1] + 1
 			return None
 		return plt.figure(self.figs.get(fig, fig)).get_axes()[0]

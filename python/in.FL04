@@ -1,0 +1,231 @@
+Setting up backend to TkAgg
+Please select machine to be compatibility diagnosed and sensor to be plotted
+Select machine:
+[1] FL01
+[2] FL02
+[3] FL03
+[4] FL04
+[5] FL05
+[6] FL06
+[7] FL07
+[8] debug-machine
+Select sensor:
+[1] drive_gear_V_eff
+[2] drive_motor_V_eff
+[3] drive_wheel_V_eff
+[4] idle_wheel_V_eff
+[5] lifting_gear_V_eff
+[6] lifting_motor_V_eff
+[7] drive_gear_a_max
+[8] drive_motor_a_max
+[9] drive_wheel_a_max
+[10] idle_wheel_a_max
+[11] lifting_gear_a_max
+[12] lifting_motor_a_max
+Selected: FL04 drive_gear_V_eff
+Selected  FL04 drive_gear_V_eff
+Plotting sensors...
+Loading from data/FL04/drive_gear_V_eff.csv
+data/FL04/drive_gear_V_eff.csv loaded successfully
+FL04 - drive_gear_V_eff
+Finished
+Loading from data/FL04/drive_motor_V_eff.csv
+data/FL04/drive_motor_V_eff.csv loaded successfully
+Loading from data/FL04/drive_wheel_V_eff.csv
+data/FL04/drive_wheel_V_eff.csv loaded successfully
+Loading from data/FL04/idle_wheel_V_eff.csv
+data/FL04/idle_wheel_V_eff.csv loaded successfully
+Loading from data/FL04/lifting_gear_V_eff.csv
+data/FL04/lifting_gear_V_eff.csv loaded successfully
+Loading from data/FL04/lifting_motor_V_eff.csv
+data/FL04/lifting_motor_V_eff.csv loaded successfully
+Loading from data/FL04/drive_gear_a_max.csv
+data/FL04/drive_gear_a_max.csv loaded successfully
+Loading from data/FL04/drive_motor_a_max.csv
+data/FL04/drive_motor_a_max.csv loaded successfully
+Loading from data/FL04/drive_wheel_a_max.csv
+data/FL04/drive_wheel_a_max.csv loaded successfully
+Loading from data/FL04/idle_wheel_a_max.csv
+data/FL04/idle_wheel_a_max.csv loaded successfully
+Loading from data/FL04/lifting_gear_a_max.csv
+data/FL04/lifting_gear_a_max.csv loaded successfully
+Loading from data/FL04/lifting_motor_a_max.csv
+data/FL04/lifting_motor_a_max.csv loaded successfully
+Plotting data...
+{'kind': 'density'}
+      unknown
+0       1.042
+1       1.070
+2       1.166
+3       1.231
+4       1.293
+...       ...
+4989    1.128
+4990    1.102
+4991    1.121
+4992    1.087
+4993    1.068
+
+[4994 rows x 1 columns]
+Plotting data...
+{'kind': 'density'}
+      unknown
+0       0.172
+1       0.311
+2       0.487
+3       0.607
+4       0.690
+...       ...
+1912    0.970
+1913    0.963
+1914    0.961
+1915    1.000
+1916    1.011
+
+[1917 rows x 1 columns]
+Estimating sensor: drive_gear_V_eff
+..seems to FIT referent data good
+..1912/1917=0.9973917579551382 examples from new data FITS to referent data interval
+..(This value should be greater than 90%)
+...Info for referent_data
+....mean: [1.17926612]
+....std d: [0.15235437]
+....variance: [0.02321185]
+...Info for new_data
+....mean: [1.15689358]
+....std d: [0.14925225]
+....variance: [0.02227623]
+Estimating sensor: drive_motor_V_eff
+..seems to FIT referent data good
+..1912/1926=0.9927310488058152 examples from new data FITS to referent data interval
+..(This value should be greater than 90%)
+...Info for referent_data
+....mean: [3.7032385]
+....std d: [0.12612937]
+....variance: [0.01590862]
+...Info for new_data
+....mean: [3.73797508]
+....std d: [0.16792431]
+....variance: [0.02819857]
+Estimating sensor: drive_wheel_V_eff
+..seems to FIT referent data good
+..1906/1921=0.9921915668922436 examples from new data FITS to referent data interval
+..(This value should be greater than 90%)
+...Info for referent_data
+....mean: [0.81473399]
+....std d: [0.04373043]
+....variance: [0.00191235]
+...Info for new_data
+....mean: [0.81145809]
+....std d: [0.04956701]
+....variance: [0.00245689]
+Estimating sensor: idle_wheel_V_eff
+..seems to FIT referent data good
+..1892/1907=0.9921342422653382 examples from new data FITS to referent data interval
+..(This value should be greater than 90%)
+...Info for referent_data
+....mean: [1.7295458]
+....std d: [0.10535033]
+....variance: [0.01109869]
+...Info for new_data
+....mean: [1.67781647]
+....std d: [0.0951203]
+....variance: [0.00904787]
+Estimating sensor: lifting_gear_V_eff
+..seems to FIT referent data good
+..2445/2454=0.9963325183374083 examples from new data FITS to referent data interval
+..(This value should be greater than 90%)
+...Info for referent_data
+....mean: [0.42376605]
+....std d: [0.04590207]
+....variance: [0.002107]
+...Info for new_data
+....mean: [0.41436634]
+....std d: [0.03359786]
+....variance: [0.00112882]
+Estimating sensor: lifting_motor_V_eff
+..NOT FITTING to referent data
+..2199/2510=0.8760956175298805 examples from new data FITS to referent data interval
+..(This value should be greater than 90%)
+...Info for referent_data
+....mean: [0.82121057]
+....std d: [0.06865366]
+....variance: [0.00471332]
+...Info for new_data
+....mean: [0.88980837]
+....std d: [0.10654757]
+....variance: [0.01135238]
+Estimating sensor: drive_gear_a_max
+..seems to FIT referent data good
+..2740/2742=0.9992706053975201 examples from new data FITS to referent data interval
+..(This value should be greater than 90%)
+...Info for referent_data
+....mean: [2748.74520847]
+....std d: [645.49907784]
+....variance: [416669.05948746]
+...Info for new_data
+....mean: [2635.91553027]
+....std d: [647.26257096]
+....variance: [418948.83576677]
+Estimating sensor: drive_motor_a_max
+..seems to FIT referent data good
+..2738/2742=0.9985412107950401 examples from new data FITS to referent data interval
+..(This value should be greater than 90%)
+...Info for referent_data
+....mean: [3485.6020568]
+....std d: [382.20753621]
+....variance: [146082.60073737]
+...Info for new_data
+....mean: [3937.19510576]
+....std d: [332.62763173]
+....variance: [110641.14139009]
+Estimating sensor: drive_wheel_a_max
+..seems to FIT referent data good
+..2485/2740=0.906934306569343 examples from new data FITS to referent data interval
+..(This value should be greater than 90%)
+...Info for referent_data
+....mean: [425.02609694]
+....std d: [54.10426199]
+....variance: [2927.27116496]
+...Info for new_data
+....mean: [463.70662226]
+....std d: [88.91040168]
+....variance: [7905.05952665]
+Estimating sensor: idle_wheel_a_max
+..seems to FIT referent data good
+..2724/2740=0.9941605839416059 examples from new data FITS to referent data interval
+..(This value should be greater than 90%)
+...Info for referent_data
+....mean: [512.98749882]
+....std d: [64.45218576]
+....variance: [4154.08424902]
+...Info for new_data
+....mean: [522.97265146]
+....std d: [78.76249457]
+....variance: [6203.53055123]
+Estimating sensor: lifting_gear_a_max
+..seems to FIT referent data good
+..3562/3564=0.999438832772166 examples from new data FITS to referent data interval
+..(This value should be greater than 90%)
+...Info for referent_data
+....mean: [2918.54359503]
+....std d: [616.18934246]
+....variance: [379689.30576576]
+...Info for new_data
+....mean: [3199.38625673]
+....std d: [556.90790173]
+....variance: [310146.41101153]
+Estimating sensor: lifting_motor_a_max
+..seems to FIT referent data good
+..3562/3564=0.999438832772166 examples from new data FITS to referent data interval
+..(This value should be greater than 90%)
+...Info for referent_data
+....mean: [6764.4088044]
+....std d: [1139.60900038]
+....variance: [1298708.6737446]
+...Info for new_data
+....mean: [7382.98044052]
+....std d: [1179.87822774]
+....variance: [1392112.63230576]
+[WARNING] Some sensors for FL04 DO NOT FIT to referent data.
+Consider consulting vibration analysis expert.
