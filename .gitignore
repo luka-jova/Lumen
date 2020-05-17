@@ -4,3 +4,4 @@
 *.zip
 *.txt
 __pycache__
+in.*
