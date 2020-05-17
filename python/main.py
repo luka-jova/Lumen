@@ -96,8 +96,6 @@ def run(e, details = True, mode = "Terminal", start = 0.0, end = 0.0):
 		new_data = {}
 		load_data(new_data, e.machine_name, e.vel_sensor_list + e.acc_sensor_list, start = start, end = end)
 		e.new_data = new_data
-		print(e.new_data)
-		print(e.referent_data)
 		mu, sigma2, new_data_mu, new_data_sigma2, good_cnt_d, outlier_cnt_d = e.compatibility_diagnosis(details = details, use_best_data = False)
 		print(mu, sigma2, new_data_mu, new_data_sigma2, good_cnt_d, outlier_cnt_d, sep="\n-------------\n")
 		

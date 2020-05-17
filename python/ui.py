@@ -87,34 +87,16 @@ def select(hint, options):
 def welcome_screen():
 	options = [
 		"Run diagnosis",
-		"Edit manual estimators",
 		"Add data"
 	]
 	run = (
 		run_diagnosis_screen,
-		eme_screen,
 		add_data_screen
 	)
 	while True:
 		run[select("Welcome! Select an action.", options) - 1]()
 
 def run_diagnosis_screen():
-	# LOADING MEASUREMENTS, FINDING THE LAST TIMESTAMP
-	print("Loading the measurements, please wait.")
-	try:
-		end_ts = 0 # last timestamp in dataset
-		for machine in df.list_sensors:
-			if "debug" in machine:
-				continue
-			for sensor in df.list_sensors[machine]:
-				temp = []
-				df.get_measurements(temp, machine, sensor)
-				end_ts = max(temp[-1].end_timestamp, end_ts)
-	except:
-		print("Error loading files. Make sure they are separated into files by sensors and into folders by machine." )
-		exit()
-	end_ts = int(end_ts) - end_ts % (3600*24) + 3600.0 * 24
-	print()
 	
 	# EXPORT DETAILS PROMPT
 	export = select("How do you want diagnosis to be exported?", ["PDF", "In terminal"])
@@ -144,19 +126,30 @@ def run_diagnosis_screen():
 	
 	# SELECTING MACHINE
 	machines = [it for it in df.list_machines if "debug" not in it]
-	machine = select("Select machine:", machines)
+	machine = machines[select("Select machine:", machines) - 1]
+	
+	# LOADING MEASUREMENTS, FINDING THE LAST TIMESTAMP
+	print("Loading the measurements, please wait.")
+	try:
+		end_ts = 0 # last timestamp in dataset
+		for sensor in df.list_sensors[machine]:
+				temp = []
+				df.get_measurements(temp, machine, sensor)
+				end_ts = max(temp[-1].end_timestamp, end_ts)	
+	except:
+		print("Error loading files. Make sure the directory structure is correct" )
+		exit()
+	end_ts = int(end_ts) - end_ts % (3600*24) + 3600.0 * 24
+	print()
 		
 	# LOADING ESTIMATOR CONFIGURATION
-	estimator = Estimator(machines[machine - 1])
+	estimator = Estimator(machine)
 	vl.load_estimator(file_path, estimator)
 	
 	# SELECTING INTERVAL
 	start_ts, end_ts = input_time_interval(end_ts)
 	print(vars(estimator), start_ts, end_ts, export, verbose)
 	main.run(estimator, verbose, export, start_ts, end_ts)
-		
-def eme_screen():
-	pass
 
 def add_data_screen():
 	print("Please enter path to the file with all measurements.")
