@@ -139,8 +139,10 @@ def Convert_measurements(L, y = 'unknown'):
 
 # list of numbers
 def Plot1d(to_plot, **kwargs):
+	if not 'ax' in kwargs:
+	 	kwargs['ax'] =  M.get_ax(kwargs.get('figure', None))
 	args = {k: v for k, v in {
-		'ax' 		: kwargs.get('ax', M.get_ax(kwargs.get('figure', None))),
+		'ax' 		: kwargs['ax'],
 		'kind'		: kwargs.get('kind', 'scatter'),
 		'color' 	: kwargs.get('color', None),
 		's'     	: kwargs.get('s', None),
@@ -175,8 +177,10 @@ def Plot1d(to_plot, **kwargs):
 	plt.show(block = False)
 
 def Plot2d(to_plot, **kwargs):
+	if not 'ax' in kwargs:
+	 	kwargs['ax'] =  M.get_ax(kwargs.get('figure', None))
 	args = {k: v for k, v in {
-		'ax' 		: kwargs.get('ax', M.get_ax(kwargs.get('figure', None))),
+		'ax' 		: kwargs['ax'],
 		'kind'		: kwargs.get('kind', 'scatter'),
 		'color' 	: kwargs.get('color', None),
 		's'     	: kwargs.get('s', None),
@@ -204,8 +208,10 @@ def Plot2d(to_plot, **kwargs):
 
 def PlotTime(to_plot, repair, **kwargs):#show_repair = True, figure = None, name = 'unknown', feature = 'basic', window = '10d', ls = None):
 
+	if not 'ax' in kwargs:
+	 	kwargs['ax'] =  M.get_ax(kwargs.get('figure', None))
 	args = {k: v for k, v in {
-		'ax' 		: kwargs.get('ax', M.get_ax(kwargs.get('figure', None))),
+		'ax' 		: kwargs['ax'],
 		's'     	: kwargs.get('s', None),
 		'color' 	: kwargs.get('color', None),
 		'kind'		: kwargs.get('kind', 'line'),
