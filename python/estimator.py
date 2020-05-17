@@ -81,20 +81,20 @@ class Estimator:
 	#DIAGNOSIS DETAILS#
 	###################
 	'''
-	RUN_V_CATEGORIZATION = True
-	RUN_A_CATEGORIZATION = True
-	RUN_CATEGORIZATION_NEW_DATA = True
-	RUN_CATEGORIZATION_ALL_DATA = True
+	RUN_V_CATEGORIZATION = False
+	RUN_A_CATEGORIZATION = False
+	RUN_CATEGORIZATION_NEW_DATA = False
+	RUN_CATEGORIZATION_ALL_DATA = False
 	
-	RUN_COMPATIBILITY_LAST_DAY = True 
+	RUN_COMPATIBILITY_LAST_DAY = False 
 	#if new_data is in intervl [start, end], then referent_data will become [start - 24:00:00, end - 24:00:00]
-	RUN_COMPATIBILITY_LAST_WEEK = True
+	RUN_COMPATIBILITY_LAST_WEEK = False
 	#if new_data is in intervl [start, end], then referent_data will become [start - 24:00:00 * 7, end - 24:00:00 * 7]
 	RUN_COMPATIBILITY_LAST_N_DAYS = True
-	REFERENT_LAST_N_DAYS = 30
+	REFERENT_LAST_N_DAYS = 5
 	#if new_data is in intervl [start, end], then referent_data will become [start - 24:00:00 * REFERENT_LAST_N_DAYS, end - 24:00:00 * REFERENT_LAST_N_DAYS]
 	
-	RUN_COMPATIBILITY_BEST_FIT = True
+	RUN_COMPATIBILITY_BEST_FIT = False
 	#Try fitting new_data to Gaussian distribution provided with (best_mu, best_sigma2)
 	
 	FIND_MIN_MEAN = True
@@ -297,6 +297,11 @@ class Estimator:
 				sigma2[ cur_sensor ] = ref_sigma2
 		##estimation done
 		
+		good_cnt_d = {}
+		outlier_cnt_d = {}
+		new_data_mu = {}
+		new_data_sigma2 = {}
+		
 		all_good = True
 		for cur_sensor in self.vel_sensor_list + self.acc_sensor_list:
 			if cur_sensor not in mu or cur_sensor not in sigma2:
@@ -313,11 +318,15 @@ class Estimator:
 			cur_mu = mu[ cur_sensor ]
 			cur_sigma2 = sigma2[ cur_sensor ]
 			
-			epsilon = ad.multivariateGaussian((cur_mu + 3 * np.sqrt(cur_sigma2))[:, None], np.array([cur_mu]), np.array([cur_sigma2])) #3*std.deviation is where 99.7% of data is located
+			epsilon = ad.multivariateGaussian((cur_mu + 3 * np.sqrt(cur_sigma2))[:, None], np.array([cur_mu]), np.array([cur_sigma2])) 
+			#3*std.deviation is where 99.7% of data is located
 			
 			new_data_pred = ad.multivariateGaussian(new_data_v, cur_mu, cur_sigma2)
 			good_cnt = sum(new_data_pred >= epsilon)
 			outlier_cnt = m_new_data - good_cnt
+			good_cnt_d[ cur_sensor ] = good_cnt
+			outlier_cnt_d[ cur_sensor ] = outlier_cnt
+			new_data_mu[ cur_sensor ], new_data_sigma2[ cur_sensor ] = ad.estimateGaussian(new_data_v)
 			'''
 			if outlier_cnt / m_new_data < 0.1: #10% tolerance
 				print("..FITTING to referent data good")
@@ -341,5 +350,5 @@ class Estimator:
 			print("Consider consulting vibration analysis expert.")
 			#TODO Messages - sto treba raditi ako se povecava / smanjuje mean value, sto treba raditi ako se povecava variance
 		'''
-		return ...
+		return (mu, sigma2, new_data_mu, new_data_sigma2, good_cnt_d, outlier_cnt_d)
 		
