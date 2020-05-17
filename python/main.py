@@ -98,7 +98,6 @@ def run(e, details = True, mode = "Terminal", start = 0.0, end = 0.0):
 			load_data(new_data, e.machine_name, e.vel_sensor_list + e.acc_sensor_list, start = start, end = end)
 			e.new_data = new_data
 			mu, sigma2, new_data_mu, new_data_sigma2, good_cnt_d, outlier_cnt_d = e.compatibility_diagnosis(details = details, use_best_data = False)
-			print(mu, sigma2, new_data_mu, new_data_sigma2, good_cnt_d, outlier_cnt_d, sep="\n-------------\n")
 
 			num_columns = len(e.vel_sensor_list)
 			fig, axes = plt.subplots(nrows=1, ncols=num_columns, figsize = (num_columns * 2, 5))
@@ -110,6 +109,11 @@ def run(e, details = True, mode = "Terminal", start = 0.0, end = 0.0):
 			for ind, cur_sensor in enumerate(e.vel_sensor_list):
 				ax = axes[ ind ]
 				ax.axis([0, 10, 0, 10])
+				
+				ax.set_yticklabels([])
+				ax.set_xticklabels([])
+				ax.xaxis.set_ticks_position('none')
+				ax.yaxis.set_ticks_position('none')
 				display_compatibility_data(ax, cur_sensor, mu, sigma2, new_data_mu, new_data_sigma2, good_cnt_d, outlier_cnt_d)				
 
 			pdf.savefig(fig)
