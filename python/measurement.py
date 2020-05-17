@@ -73,4 +73,3 @@ class Measurement:
                 raise KeyError()
 
 # FL02;lifting_gear_a_max;2019-07-10;"2019-07-10 07:13:29.647";"2019-07-10 07:13:29.647";8609.316;mg (milli-g)
-

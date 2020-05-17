@@ -1,7 +1,7 @@
-import python.dataset_loader as dl
-import python.measurement as ms
+import dataset_loader as dl
+import measurement as ms
 from random import shuffle
-import python.generate_output as go
+import generate_output as go
 #import numpy as np
 import os, os.path
 #from scipy import stats
