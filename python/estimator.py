@@ -158,7 +158,7 @@ class Estimator:
 	def category_diagnosis(self, meas_type, by_sensor = True, details = True):
 		if meas_type not in ["a", "v"]:
 			print("Wrong measure type")
-			return
+			return None
 		if(meas_type == "a"):
 			print("Running acceleration diagnosis for machine:", self.machine_name)			
 			sensor_list = self.acc_sensor_list
@@ -179,27 +179,28 @@ class Estimator:
 			for cur_meas in self.new_data[ cur_sensor ]:
 				cnt_categ[ cur_sensor ][ self.classify(cur_meas, meas_type)[ 0 ] ] += 1
 		
-		if by_sensor:
-			for cur_sensor in sensor_list:
-				class_ind, cur_class = self.classify(cnt_categ[ cur_sensor ], meas_type)
-				
-				if class_ind == -1 or len(self.new_data[ cur_sensor ]) == 0:
-					print("..", cur_sensor, ": ", sep = "", end="")
-					print("N/A")
-					if(details):
-						print("....no data")
-					else:
-						print()
+		for cur_sensor in sensor_list:
+			class_ind, cur_class = self.classify(cnt_categ[ cur_sensor ], meas_type)
+			'''
+			<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<remove this
+			if class_ind == -1 or len(self.new_data[ cur_sensor ]) == 0:
+				print("..", cur_sensor, ": ", sep = "", end="")
+				print("N/A")
+				if(details):
+					print("....no data")
 				else:
-					print("..", cur_sensor, ": ", sep="", end ="")
-					print(cur_class.class_name)
-					
-					if(details):
-						for ind, cnt in enumerate(cnt_categ[ cur_sensor ]):
-							print("....", meas_classification[ ind ].class_name, "/", "all: ", sep = "", end = "")
-							print(cnt, "/", len(self.new_data[ cur_sensor ]), " = ", cnt/len(self.new_data[ cur_sensor ]), sep = "")
-		
-		
+					print()
+			else:
+				print("..", cur_sensor, ": ", sep="", end ="")
+				print(cur_class.class_name)
+				
+				if(details):
+					for ind, cnt in enumerate(cnt_categ[ cur_sensor ]):
+						print("....", meas_classification[ ind ].class_name, "/", "all: ", sep = "", end = "")
+						print(cnt, "/", len(self.new_data[ cur_sensor ]), " = ", cnt/len(self.new_data[ cur_sensor ]), sep = "")
+				>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+				'''
+		'''
 		#whole machine classification
 		cnt_categ_total = [0] * len(meas_classification)
 		cnt_categ_total_sum = 0
@@ -212,6 +213,8 @@ class Estimator:
 			for ind, cnt in enumerate(cnt_categ_total):
 				print("..", meas_classification[ ind ].class_name, "/", "all: ", sep = "", end = "")
 				print(cnt, "/", cnt_categ_total_sum, " = ", cnt/cnt_categ_total_sum, sep = "")
+		'''
+		return cnt_categ
 	
 	
 	
@@ -301,7 +304,7 @@ class Estimator:
 			new_data_pred = ad.multivariateGaussian(new_data_v, cur_mu, cur_sigma2)
 			good_cnt = sum(new_data_pred >= epsilon)
 			outlier_cnt = m_new_data - good_cnt
-			
+			'''
 			if outlier_cnt / m_new_data < 0.1: #10% tolerance
 				print("..FITTING to referent data good")
 			else:
@@ -312,14 +315,17 @@ class Estimator:
 				print("..(This value should be greater than 90%)")
 				print(cur_sensor, "\n.referent data\n", "..mu: ", cur_mu, "\n..std.dev.: ", np.sqrt(cur_sigma2), "\n..variance: ", cur_sigma2, sep="")
 				self.display_data_info(new_data_v, "new_data")
-				
+			'''	
 				
 			#TODO Plot distribution for referent_data and new_data on same graph for comparing	
 		#endfor
+		'''
 		if all_good:
 			print("[GOOD] All sensors for", self.machine_name, "FIT to referent data.")
 		else:
 			print("[WARNING] Some sensors for", self.machine_name, "DO NOT FIT to referent data.")
 			print("Consider consulting vibration analysis expert.")
 			#TODO Messages - sto treba raditi ako se povecava / smanjuje mean value, sto treba raditi ako se povecava variance
+		'''
+		return ...
 		

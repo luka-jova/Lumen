@@ -41,28 +41,32 @@ def run(e, details = True, mode = "Terminal", start = 0.0, end = 0.0):
 		new_data = {}
 		load_data(new_data, e.machine_name, e.acc_sensor_list, start = 0, end = inf)
 		e.new_data = new_data
-		e.category_diagnosis("a", details = details)
+		out = e.category_diagnosis("a", details = details)
+		print(out)
 		
 	if e.RUN_A_CATEGORIZATION and e.RUN_CATEGORIZATION_NEW_DATA:
 		print("-------Categorization of acceleration for new data---------")
 		new_data = {}
 		load_data(new_data, e.machine_name, e.acc_sensor_list, start = start, end = end)
 		e.new_data = new_data
-		e.category_diagnosis("a", details = details)
+		out = e.category_diagnosis("a", details = details)
+		print(out)
 		
 	if e.RUN_V_CATEGORIZATION and e.RUN_CATEGORIZATION_ALL_DATA:
 		print("-------Categorization of velocity for all data---------")
 		new_data = {}
 		load_data(new_data, e.machine_name, e.vel_sensor_list, start = 0, end = inf)
 		e.new_data = new_data
-		e.category_diagnosis("v", details = details)
+		out = e.category_diagnosis("v", details = details)
+		print(out)
 	
 	if e.RUN_V_CATEGORIZATION and e.RUN_CATEGORIZATION_NEW_DATA:
 		print("-------Categorization of velocity for new data---------")
 		new_data = {}
 		load_data(new_data, e.machine_name, e.vel_sensor_list, start = start, end = end)
 		e.new_data = new_data
-		e.category_diagnosis("v", details = details)
+		out = e.category_diagnosis("v", details = details)
+		print(out)
 
 	if e.RUN_COMPATIBILITY_LAST_DAY:
 		print("------Checking compatibility with last day-----------")
@@ -109,9 +113,7 @@ def load_data(new_data, machine_name, sensor_list, start, end):
 		filter.filtered_data(new_data[ cur_sensor ], machine_name, cur_sensor, start, None, end)
 
 
-def 
-
-#######NEPOTREBNO KASNIJE
+################################################################################NEPOTREBNO KASNIJE
 CUR_MACHINE = "FL01"
 CUR_SENSOR = "drive_gear_V_eff"
 
