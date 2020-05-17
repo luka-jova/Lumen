@@ -159,7 +159,9 @@ def Plot1d(to_plot, **kwargs):
 		ApplyFeature(data, feature, window)
 		line = ''
 		if args['kind'] in ['density', 'hist']:
-			data.plot(**args)
+			ax = data.plot(**args)
+			if 'ax' not in args:
+				args['ax'] = ax
 			line = 'data.plot(**args)'
 		else:
 			data['y'] = 0
@@ -167,7 +169,8 @@ def Plot1d(to_plot, **kwargs):
 				args['s'] = 30
 			line = 'data.plot(x = data.columns[0], y = data.columns[1], **args)'
 			ax = data.plot(x = data.columns[0], y = data.columns[1], **args)
-			args['ax'] = ax
+			if 'ax' not in args:
+				args['ax'] = ax
 		if fig:
 			M.addplot(fig, line, data, args)
 	plt.show(block = False)
@@ -197,7 +200,8 @@ def Plot2d(to_plot, **kwargs):
 		ax = data.plot(x = data.columns[0], y = data.columns[1],  **args)
 		if fig:
 			M.addplot(fig, line, data, args)
-		args['ax'] = ax
+		if 'ax' not in args:
+			args['ax'] = ax
 
 def PlotTime(to_plot, **kwargs):#show_repair = True, figure = None, name = 'unknown', feature = 'basic', window = '10d', ls = None):
 
@@ -225,7 +229,8 @@ def PlotTime(to_plot, **kwargs):#show_repair = True, figure = None, name = 'unkn
 		line = 'data.plot(**args)'
 		if fig:
 			M.addplot(fig, line, data, args)
-		args['ax'] = ax
+		if 'ax' not in args:
+			args['ax'] = ax
 
 #repair = 'what machine'
 #repair = 'FL01'
@@ -233,7 +238,6 @@ def PlotTime(to_plot, **kwargs):#show_repair = True, figure = None, name = 'unkn
 def Plot(data = [], machine = None, sensors = [], **kwargs):
 
 	data = data.copy()
-
 
 	to_plot = []
 	datatype = None
@@ -283,7 +287,8 @@ def Plot(data = [], machine = None, sensors = [], **kwargs):
 		for when in manual_repair[machine]:
 			plt.axvline(x=when, color="black", linestyle="--")
 
-	M.refresh()
+	if not 'ax' in kwargs:
+		M.refresh()
 
 def ax(fig):
 	return M.get_ax(fig)
