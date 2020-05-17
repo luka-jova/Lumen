@@ -40,13 +40,25 @@ def run(e, details = True, mode = "Terminal", start = 0.0, end = 0.0):
 		if isinstance(end, str):
 			end = filter.to_timestamp(end)
 		
+		fig, ax = plt.subplots(nrows = 1, ncols = 1)
+		ax.axis([0, 10, 0, 10])
+		
+		ax.set_yticklabels([])
+		ax.set_xticklabels([])
+		ax.xaxis.set_ticks_position('none')
+		ax.yaxis.set_ticks_position('none')
+		ax.text(5, 5, "Diagnosis for " + e.machine_name, ha = 'center', va = 'center', fontsize = 30)	
+		pdf.savefig(fig)
+		plt.close("all")
+		
 		if e.RUN_A_CATEGORIZATION and e.RUN_CATEGORIZATION_ALL_DATA:
 			print("-------Categorization of acceleration for all data---------")
 			new_data = {}
 			load_data(new_data, e.machine_name, e.acc_sensor_list, start = 0, end = inf)
 			e.new_data = new_data
 			out = e.category_diagnosis("a", details = details)
-			print(out)
+			categorization_pdf('aa', e, out, start, end, pdf)
+			plt.close("all")
 			
 		if e.RUN_A_CATEGORIZATION and e.RUN_CATEGORIZATION_NEW_DATA:
 			print("-------Categorization of acceleration for new data---------")
@@ -54,7 +66,8 @@ def run(e, details = True, mode = "Terminal", start = 0.0, end = 0.0):
 			load_data(new_data, e.machine_name, e.acc_sensor_list, start = start, end = end)
 			e.new_data = new_data
 			out = e.category_diagnosis("a", details = details)
-			print(out)
+			categorization_pdf('an', e, out, start, end, pdf)
+			plt.close("all")
 			
 		if e.RUN_V_CATEGORIZATION and e.RUN_CATEGORIZATION_ALL_DATA:
 			print("-------Categorization of velocity for all data---------")
@@ -62,6 +75,8 @@ def run(e, details = True, mode = "Terminal", start = 0.0, end = 0.0):
 			load_data(new_data, e.machine_name, e.vel_sensor_list, start = 0, end = inf)
 			e.new_data = new_data
 			out = e.category_diagnosis("v", details = details)
+			categorization_pdf('va', e, out, start, end, pdf)
+			plt.close("all")
 			print(out)
 		
 		if e.RUN_V_CATEGORIZATION and e.RUN_CATEGORIZATION_NEW_DATA:
@@ -70,7 +85,8 @@ def run(e, details = True, mode = "Terminal", start = 0.0, end = 0.0):
 			load_data(new_data, e.machine_name, e.vel_sensor_list, start = start, end = end)
 			e.new_data = new_data
 			out = e.category_diagnosis("v", details = details)
-			print(out)
+			categorization_pdf('vn', e, out, start, end, pdf)
+			plt.close("all")
 		
 		if e.RUN_COMPATIBILITY_LAST_WEEK:
 			print("------Checking compatibility with last week-----------")
@@ -99,6 +115,90 @@ def run(e, details = True, mode = "Terminal", start = 0.0, end = 0.0):
 			e.new_data = new_data
 			e.referent_data = {}
 			compatibility_pdfgen(pdf, e, "from " + filter.to_date(start) + " until " + filter.to_date(end), " recommended distribution (from .config) ", use_best_data = True)
+
+
+
+###############<<<<<<<<<<<<<<<<<<KLEPEC
+def no_data_figure(e, type, start, end):
+	print('No data')
+
+def categorization_figure(e, machine, sensor, out, type, start, end):
+	fig, (ax1, ax2) = plt.subplots(1, 2, tight_layout = True, figsize = (10, 5))
+
+	#fig.patch.set_visible(False)
+
+	title = r"\noindent Categorization check \newline start: " + filter.to_date(start) + ", end: " + filter.to_date(end) + r" \newline "
+	disp_machine = ' '.join(machine.split('_')[:])
+	disp_sensor	 = ' '.join(sensor.split('_')[:])
+	title += f"{disp_machine} - {disp_sensor}"
+	ax1.set_title(title, fontweight = 'bold', fontsize = 15)
+
+	uk = sum(out)
+	if uk == 0:
+		ax1.axis('off')
+		ax2.axis([0, 10, 0, 10])
+		ax2.text(5, 5, 'No data', va = 'center', ha = 'center', fontsize = 30)
+		return fig
+
+	data = []
+	filter.filtered_data(data, machine, sensor, start = start, end = end)
+	vis.Plot(data = data, kind = 'scatter', s = 0.1, color = 'blue', ax = ax2, name = f'{disp_machine} {disp_sensor}', repair = machine)#machine + ' ' + sensor)
+	#vis.Plot(data = data, feature = 'rol-mean', color = 'white', ax = ax2, name = ' proba',legend = False)#machine + ' ' + sensor)
+	ax1.axis([0, 10, 0, 10])
+
+	LIST = e.vel_classification
+	if type[0] == 'a':
+		LIST = e.acc_classification
+
+	colors = ['green', 'yellow', 'orange', 'red']
+
+	text = r'\noindent '
+	for i, C in enumerate(LIST):
+		text += f'{C.class_name}: ${out[i]} / {uk}$'
+		text += r' \newline '
+
+	ind, category = e.classify(out, type[0])
+
+	ax1.text(3, 5, text, ha = 'center', va = 'center', fontsize = 15)
+	color = 'green'
+	ax1.text(3, 2, category.class_name, fontsize=10,  bbox={'facecolor': colors[ind], 'alpha': 0.5, 'pad': 10},
+		ha = "center", verticalalignment = "bottom")
+
+	ymin, ymax = ax2.get_ylim()
+	offset = 1000
+
+	for i, C in enumerate(LIST):
+		lo = C.min_val
+		if i == 0:
+			lo -= offset
+		hi = C.max_val
+		lo = max(lo, ymin - offset)
+		hi = min(hi, ymax + offset)
+
+		if lo != hi:
+			ax2.axhspan(lo, hi, facecolor = colors[i], alpha=0.1)
+
+	plt.xticks(rotation=45)
+	ax2.set_ylim(top = ymax, bottom = ymin)
+	ax1.axis('off')
+
+	return fig
+
+def categorization_pdf(type, e, out, start, end, pdf):
+	machine = e.machine_name
+	sensor_list = e.vel_sensor_list
+	if type[0] == 'a':
+		sensor_list = e.acc_sensor_list
+
+	for sensor in sensor_list:
+		pdf.savefig(categorization_figure(e, machine, sensor, out[sensor], type, start, end))
+
+
+################>>>>>>>>>>>>>>>>>>>ENDOFKLEPEC
+
+
+
+
 
 #estimator has to be loaded
 def compatibility_pdfgen(pdf, e, new_data_stamp, referent_data_stamp, use_best_data = False):

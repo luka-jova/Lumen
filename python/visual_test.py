@@ -205,7 +205,7 @@ def Plot2d(to_plot, **kwargs):
 		if 'ax' not in args:
 			args['ax'] = ax
 
-def PlotTime(to_plot, repair, **kwargs):#show_repair = True, figure = None, name = 'unknown', feature = 'basic', window = '10d', ls = None):
+def PlotTime(to_plot, rep, **kwargs):#show_repair = True, figure = None, name = 'unknown', feature = 'basic', window = '10d', ls = None):
 	if not 'ax' in kwargs:
 	 	kwargs['ax'] =  M.get_ax(kwargs.get('figure', None))
 	args = {k: v for k, v in {
@@ -235,8 +235,8 @@ def PlotTime(to_plot, repair, **kwargs):#show_repair = True, figure = None, name
 			M.addplot(fig, line, data, args)
 		if 'ax' not in args:
 			args['ax'] = ax
-	if repair:
-		for when in manual_repair[repair]:
+	if rep:
+		for when in manual_repair[rep]:
 			x = datetime.strptime(when, '%Y-%m-%d %H:%M:%S.%f')
 			args['ax'].axvline(x = x, color = "black", linestyle="--")
 
@@ -283,10 +283,10 @@ def Plot(data = [], machine = None, sensors = [], **kwargs):
 	else:
 		print('There is no data to plot')
 
-	repair = kwargs.get('repair', machine)
+	rep = kwargs.get('repair', machine)
 
 	if datatype == "TIME":
-		PlotTime(to_plot, repair, **kwargs)
+		PlotTime(to_plot, rep, **kwargs)
 	elif datatype == '1d':
 		Plot1d(to_plot, **kwargs)
 	elif datatype == '2d':
