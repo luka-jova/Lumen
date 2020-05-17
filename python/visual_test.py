@@ -6,11 +6,8 @@ from datetime import datetime
 import obrada
 import data_filter
 from measurement import Measurement
-import matplotlib
-from datetime import datetime
 
 matplotlib.use('TkAgg')
-
 
 # u test.py su primjeri nekih poziva
 
@@ -291,8 +288,7 @@ def Plot(data = [], machine = None, sensors = [], **kwargs):
 	elif datatype == '2d':
 		Plot2d(to_plot, **kwargs)
 
-	if not 'ax' in kwargs:
-		M.refresh()
+	M.refresh()
 
 def ax(fig):
 	return M.get_ax(fig)
@@ -374,7 +370,7 @@ class Manager:
 	def refresh(self):
 		for title in self.fignum:
 			self.get_fig(title).canvas.set_window_title(title)
-		plt.show(block = False)
+			self.get_fig(title).show()
 
 M = Manager()
 
