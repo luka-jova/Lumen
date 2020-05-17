@@ -30,99 +30,99 @@ e - Estimator object that has all the configuration details:
 #importlib.reload(estimator); importlib.reload(main); importlib.reload(main.estimator); e=estimator.Estimator("FL04"); main.run(e, start="2019-04-01", end="2019-05-01")
 
 def run(e, details = True, mode = "Terminal", start = 0.0, end = 0.0):
-	pdf = PdfPages('diagnosis.pdf')	
-	plt.rc('text', usetex=True)	
-	if isinstance(start, str):
-		start = filter.to_timestamp(start)
-	if isinstance(end, str):
-		end = filter.to_timestamp(end)
-	
-	if e.RUN_A_CATEGORIZATION and e.RUN_CATEGORIZATION_ALL_DATA:
-		print("-------Categorization of acceleration for all data---------")
-		new_data = {}
-		load_data(new_data, e.machine_name, e.acc_sensor_list, start = 0, end = inf)
-		e.new_data = new_data
-		out = e.category_diagnosis("a", details = details)
-		print(out)
+	with PdfPages('diagnosis.pdf') as pdf:
+		plt.rc('text', usetex=True)
+		if isinstance(start, str):
+			start = filter.to_timestamp(start)
+		if isinstance(end, str):
+			end = filter.to_timestamp(end)
 		
-	if e.RUN_A_CATEGORIZATION and e.RUN_CATEGORIZATION_NEW_DATA:
-		print("-------Categorization of acceleration for new data---------")
-		new_data = {}
-		load_data(new_data, e.machine_name, e.acc_sensor_list, start = start, end = end)
-		e.new_data = new_data
-		out = e.category_diagnosis("a", details = details)
-		print(out)
+		if e.RUN_A_CATEGORIZATION and e.RUN_CATEGORIZATION_ALL_DATA:
+			print("-------Categorization of acceleration for all data---------")
+			new_data = {}
+			load_data(new_data, e.machine_name, e.acc_sensor_list, start = 0, end = inf)
+			e.new_data = new_data
+			out = e.category_diagnosis("a", details = details)
+			print(out)
+			
+		if e.RUN_A_CATEGORIZATION and e.RUN_CATEGORIZATION_NEW_DATA:
+			print("-------Categorization of acceleration for new data---------")
+			new_data = {}
+			load_data(new_data, e.machine_name, e.acc_sensor_list, start = start, end = end)
+			e.new_data = new_data
+			out = e.category_diagnosis("a", details = details)
+			print(out)
+			
+		if e.RUN_V_CATEGORIZATION and e.RUN_CATEGORIZATION_ALL_DATA:
+			print("-------Categorization of velocity for all data---------")
+			new_data = {}
+			load_data(new_data, e.machine_name, e.vel_sensor_list, start = 0, end = inf)
+			e.new_data = new_data
+			out = e.category_diagnosis("v", details = details)
+			print(out)
 		
-	if e.RUN_V_CATEGORIZATION and e.RUN_CATEGORIZATION_ALL_DATA:
-		print("-------Categorization of velocity for all data---------")
-		new_data = {}
-		load_data(new_data, e.machine_name, e.vel_sensor_list, start = 0, end = inf)
-		e.new_data = new_data
-		out = e.category_diagnosis("v", details = details)
-		print(out)
-	
-	if e.RUN_V_CATEGORIZATION and e.RUN_CATEGORIZATION_NEW_DATA:
-		print("-------Categorization of velocity for new data---------")
-		new_data = {}
-		load_data(new_data, e.machine_name, e.vel_sensor_list, start = start, end = end)
-		e.new_data = new_data
-		out = e.category_diagnosis("v", details = details)
-		print(out)
+		if e.RUN_V_CATEGORIZATION and e.RUN_CATEGORIZATION_NEW_DATA:
+			print("-------Categorization of velocity for new data---------")
+			new_data = {}
+			load_data(new_data, e.machine_name, e.vel_sensor_list, start = start, end = end)
+			e.new_data = new_data
+			out = e.category_diagnosis("v", details = details)
+			print(out)
 
-	if e.RUN_COMPATIBILITY_LAST_DAY:
-		print("------Checking compatibility with last day-----------")
-		referent_data = {}
-		load_data(referent_data, e.machine_name, e.vel_sensor_list + e.acc_sensor_list, start = start - 24*60*60, end = start)
-		e.referent_data = referent_data
-		new_data = {}
-		load_data(new_data, e.machine_name, e.vel_sensor_list + e.acc_sensor_list, start = start, end = end)
-		e.new_data = new_data
-		e.compatibility_diagnosis(details = details, use_best_data = False)
-	
-	if e.RUN_COMPATIBILITY_LAST_WEEK:
-		print("------Checking compatibility with last week-----------")
-		referent_data = {}
-		load_data(referent_data, e.machine_name, e.vel_sensor_list + e.acc_sensor_list, start = start - 7*24*60*60, end = start)
-		e.referent_data = referent_data
-		new_data = {}
-		load_data(new_data, e.machine_name, e.vel_sensor_list + e.acc_sensor_list, start = start, end = end)
-		e.new_data = new_data
-		e.compatibility_diagnosis(details = details, use_best_data = False)
-	
-	if e.RUN_COMPATIBILITY_LAST_N_DAYS:
-		print("------Checking compatibility with last", e.REFERENT_LAST_N_DAYS, "days-----------")
-		referent_data = {}
-		load_data(referent_data, e.machine_name, e.vel_sensor_list + e.acc_sensor_list, start = start - e.REFERENT_LAST_N_DAYS*24*60*60, end = start)
-		e.referent_data = referent_data
-		new_data = {}
-		load_data(new_data, e.machine_name, e.vel_sensor_list + e.acc_sensor_list, start = start, end = end)
-		e.new_data = new_data
-		mu, sigma2, new_data_mu, new_data_sigma2, good_cnt_d, outlier_cnt_d = e.compatibility_diagnosis(details = details, use_best_data = False)
-		print(mu, sigma2, new_data_mu, new_data_sigma2, good_cnt_d, outlier_cnt_d, sep="\n-------------\n")
-
-		num_columns = len(e.vel_sensor_list)
-		fig, axes = plt.subplots(nrows=1, ncols=num_columns, figsize = (num_columns * 2, 5))
-		fig.subplots_adjust(top=0.85)
-		title = r"\noindent Compatibility check \newline start: " + filter.to_date(start) + ", end: " + filter.to_date(end) + r"\newline"
-		title += " Referent data is last " + str(e.REFERENT_LAST_N_DAYS) + " days"
-		fig.suptitle(title, fontsize=14, fontweight='bold')
+		if e.RUN_COMPATIBILITY_LAST_DAY:
+			print("------Checking compatibility with last day-----------")
+			referent_data = {}
+			load_data(referent_data, e.machine_name, e.vel_sensor_list + e.acc_sensor_list, start = start - 24*60*60, end = start)
+			e.referent_data = referent_data
+			new_data = {}
+			load_data(new_data, e.machine_name, e.vel_sensor_list + e.acc_sensor_list, start = start, end = end)
+			e.new_data = new_data
+			e.compatibility_diagnosis(details = details, use_best_data = False)
 		
-		for ind, cur_sensor in enumerate(e.vel_sensor_list):
-			ax = axes[ ind ]
-			ax.axis([0, 10, 0, 10])
-			display_compatibility_data(ax, cur_sensor, mu, sigma2, new_data_mu, new_data_sigma2, good_cnt_d, outlier_cnt_d)				
-
-		pdf.savefig(fig)
-		plt.close('all')
-		print("pokrenuto\n" + str(plt.get_fignums()))
+		if e.RUN_COMPATIBILITY_LAST_WEEK:
+			print("------Checking compatibility with last week-----------")
+			referent_data = {}
+			load_data(referent_data, e.machine_name, e.vel_sensor_list + e.acc_sensor_list, start = start - 7*24*60*60, end = start)
+			e.referent_data = referent_data
+			new_data = {}
+			load_data(new_data, e.machine_name, e.vel_sensor_list + e.acc_sensor_list, start = start, end = end)
+			e.new_data = new_data
+			e.compatibility_diagnosis(details = details, use_best_data = False)
 		
-	
-	if e.RUN_COMPATIBILITY_BEST_FIT:
-		print("------Checking compatibility with best fit------------")
-		new_data = {}
-		load_data(new_data, e.machine_name, e.vel_sensor_list + e.acc_sensor_list, start = start, end = end)
-		e.new_data = new_data
-		e.compatibility_diagnosis(details = details, use_best_data = True)
+		if e.RUN_COMPATIBILITY_LAST_N_DAYS:
+			print("------Checking compatibility with last", e.REFERENT_LAST_N_DAYS, "days-----------")
+			referent_data = {}
+			load_data(referent_data, e.machine_name, e.vel_sensor_list + e.acc_sensor_list, start = start - e.REFERENT_LAST_N_DAYS*24*60*60, end = start)
+			e.referent_data = referent_data
+			new_data = {}
+			load_data(new_data, e.machine_name, e.vel_sensor_list + e.acc_sensor_list, start = start, end = end)
+			e.new_data = new_data
+			mu, sigma2, new_data_mu, new_data_sigma2, good_cnt_d, outlier_cnt_d = e.compatibility_diagnosis(details = details, use_best_data = False)
+			print(mu, sigma2, new_data_mu, new_data_sigma2, good_cnt_d, outlier_cnt_d, sep="\n-------------\n")
+
+			num_columns = len(e.vel_sensor_list)
+			fig, axes = plt.subplots(nrows=1, ncols=num_columns, figsize = (num_columns * 2, 5))
+			fig.subplots_adjust(top=0.85)
+			title = r"\noindent Compatibility check \newline start: " + filter.to_date(start) + ", end: " + filter.to_date(end) + r"\newline"
+			title += " Referent data is last " + str(e.REFERENT_LAST_N_DAYS) + " days"
+			fig.suptitle(title, fontsize=14, fontweight='bold')
+			
+			for ind, cur_sensor in enumerate(e.vel_sensor_list):
+				ax = axes[ ind ]
+				ax.axis([0, 10, 0, 10])
+				display_compatibility_data(ax, cur_sensor, mu, sigma2, new_data_mu, new_data_sigma2, good_cnt_d, outlier_cnt_d)				
+
+			pdf.savefig(fig)
+			plt.close('all')
+			print("pokrenuto\n" + str(plt.get_fignums()))
+			
+		
+		if e.RUN_COMPATIBILITY_BEST_FIT:
+			print("------Checking compatibility with best fit------------")
+			new_data = {}
+			load_data(new_data, e.machine_name, e.vel_sensor_list + e.acc_sensor_list, start = start, end = end)
+			e.new_data = new_data
+			e.compatibility_diagnosis(details = details, use_best_data = True)
 		
 
 def display_compatibility_data(ax, cur_sensor, mu_d, sigma2_d, new_data_mu_d, new_data_sigma2_d, good_cnt_d, outlier_cnt_d):
