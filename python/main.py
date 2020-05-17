@@ -30,7 +30,8 @@ e - Estimator object that has all the configuration details:
 #importlib.reload(estimator); importlib.reload(main); importlib.reload(main.estimator); e=estimator.Estimator("FL04"); main.run(e, start="2019-04-01", end="2019-05-01")
 
 def run(e, details = True, mode = "Terminal", start = 0.0, end = 0.0):
-	
+	pdf = PdfPages('diagnosis.pdf')	
+	plt.rc('text', usetex=True)	
 	if isinstance(start, str):
 		start = filter.to_timestamp(start)
 	if isinstance(end, str):
@@ -98,23 +99,21 @@ def run(e, details = True, mode = "Terminal", start = 0.0, end = 0.0):
 		e.new_data = new_data
 		mu, sigma2, new_data_mu, new_data_sigma2, good_cnt_d, outlier_cnt_d = e.compatibility_diagnosis(details = details, use_best_data = False)
 		print(mu, sigma2, new_data_mu, new_data_sigma2, good_cnt_d, outlier_cnt_d, sep="\n-------------\n")
-		
-		with PdfPages('diagnosis.pdf') as pdf:
-			plt.rc('text', usetex=True)
-			num_columns = len(e.vel_sensor_list)
-			fig, axes = plt.subplots(nrows=1, ncols=num_columns, figsize = (num_columns * 2, 5))
-			fig.subplots_adjust(top=0.85)
-			title = r"\noindent Compatibility check \newline start: " + filter.to_date(start) + ", end: " + filter.to_date(end) + r"\newline"
-			title += " Referent data is last " + str(e.REFERENT_LAST_N_DAYS) + " days"
-			fig.suptitle(title, fontsize=14, fontweight='bold')
-			
-			for ind, cur_sensor in enumerate(e.vel_sensor_list):
-				ax = axes[ ind ]
-				ax.axis([0, 10, 0, 10])
-				display_compatibility_data(ax, cur_sensor, mu, sigma2, new_data_mu, new_data_sigma2, good_cnt_d, outlier_cnt_d)				
 
-			pdf.savefig(fig)
-			plt.close('all')
+		num_columns = len(e.vel_sensor_list)
+		fig, axes = plt.subplots(nrows=1, ncols=num_columns, figsize = (num_columns * 2, 5))
+		fig.subplots_adjust(top=0.85)
+		title = r"\noindent Compatibility check \newline start: " + filter.to_date(start) + ", end: " + filter.to_date(end) + r"\newline"
+		title += " Referent data is last " + str(e.REFERENT_LAST_N_DAYS) + " days"
+		fig.suptitle(title, fontsize=14, fontweight='bold')
+		
+		for ind, cur_sensor in enumerate(e.vel_sensor_list):
+			ax = axes[ ind ]
+			ax.axis([0, 10, 0, 10])
+			display_compatibility_data(ax, cur_sensor, mu, sigma2, new_data_mu, new_data_sigma2, good_cnt_d, outlier_cnt_d)				
+
+		pdf.savefig(fig)
+		plt.close('all')
 		print("pokrenuto\n" + str(plt.get_fignums()))
 		
 	

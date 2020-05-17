@@ -91,7 +91,7 @@ class Estimator:
 	RUN_COMPATIBILITY_LAST_WEEK = False
 	#if new_data is in intervl [start, end], then referent_data will become [start - 24:00:00 * 7, end - 24:00:00 * 7]
 	RUN_COMPATIBILITY_LAST_N_DAYS = True
-	REFERENT_LAST_N_DAYS = 5
+	REFERENT_LAST_N_DAYS = 100
 	#if new_data is in intervl [start, end], then referent_data will become [start - 24:00:00 * REFERENT_LAST_N_DAYS, end - 24:00:00 * REFERENT_LAST_N_DAYS]
 	
 	RUN_COMPATIBILITY_BEST_FIT = False
