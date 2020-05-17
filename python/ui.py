@@ -28,7 +28,7 @@ def input_time_interval(end_ts):
 		"all data",
 		"enter custom time intervals",
 	]
-	interval_option = select("Select time interval for analysis:", interval_options)
+	interval_option = select("Select time interval for analysis (new data):", interval_options)
 	if interval_option == 6:
 		print("Please enter start time in format \"y-m-d\" or \"y-m-d H:M:S\"")
 		start_ts = input_date()
@@ -93,14 +93,14 @@ def welcome_screen():
 		run_diagnosis_screen,
 		add_data_screen
 	)
-	while True:
-		run[select("Welcome! Select an action.", options) - 1]()
+	run[select("Welcome! Select an action.", options) - 1]()
+	print("-------Finished----------")
 
 def run_diagnosis_screen():
 	
 	# EXPORT DETAILS PROMPT
-	export = select("How do you want diagnosis to be exported?", ["PDF", "In terminal"])
-	export = ("PDF", "Terminal")[export - 1] # convert to correct argument for main.run()
+	export = select("How do you want diagnosis to be exported?", ["PDF"])
+	export = ("PDF")[export - 1] # convert to correct argument for main.run()
 	
 	# SELECTING ESTIMATOR CONFIGURATION
 	ext = "config" # file extension without leading '.'

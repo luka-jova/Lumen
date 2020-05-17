@@ -97,7 +97,8 @@ def run(e, details = True, mode = "Terminal", start = 0.0, end = 0.0):
 			new_data = {}
 			load_data(new_data, e.machine_name, e.vel_sensor_list + e.acc_sensor_list, start = start, end = end)
 			e.new_data = new_data
-			compatibility_pdfgen(pdf, e, "from " + filter.to_date(start) + " until " + filter.to_date(end), " referent data ", use_best_data = True)
+			e.referent_data = {}
+			compatibility_pdfgen(pdf, e, "from " + filter.to_date(start) + " until " + filter.to_date(end), " recommended distribution (from .config) ", use_best_data = True)
 
 #estimator has to be loaded
 def compatibility_pdfgen(pdf, e, new_data_stamp, referent_data_stamp, use_best_data = False):
