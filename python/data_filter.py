@@ -3,6 +3,9 @@ from numpy import inf
 import numpy as np
 import dataset_loader as dl
 
+def to_date(timestamp):
+	return dt.fromtimestamp(timestamp).strftime("%Y-%m-%d")
+
 def to_timestamp(s, is_interval = False):
 	if is_interval:
 		result = 0.
