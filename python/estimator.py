@@ -90,11 +90,11 @@ class Estimator:
 	#if new_data is in intervl [start, end], then referent_data will become [start - 24:00:00, end - 24:00:00]
 	RUN_COMPATIBILITY_LAST_WEEK = False
 	#if new_data is in intervl [start, end], then referent_data will become [start - 24:00:00 * 7, end - 24:00:00 * 7]
-	RUN_COMPATIBILITY_LAST_N_DAYS = True
+	RUN_COMPATIBILITY_LAST_N_DAYS = False
 	REFERENT_LAST_N_DAYS = 100
 	#if new_data is in intervl [start, end], then referent_data will become [start - 24:00:00 * REFERENT_LAST_N_DAYS, end - 24:00:00 * REFERENT_LAST_N_DAYS]
 	
-	RUN_COMPATIBILITY_BEST_FIT = False
+	RUN_COMPATIBILITY_BEST_FIT = True
 	#Try fitting new_data to Gaussian distribution provided with (best_mu, best_sigma2)
 	
 	FIND_MIN_MEAN = True
