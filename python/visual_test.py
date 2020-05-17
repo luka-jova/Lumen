@@ -282,13 +282,19 @@ def Plot(data = [], machine = None, sensors = [], **kwargs):
 	elif datatype == '2d':
 		Plot2d(to_plot, **kwargs)
 
-	kind = kwargs.get('kind', None)
-	if machine and kind != 'scatter':
-		for when in manual_repair[machine]:
+	repair = kwargs.get('repair', machine)
+	'''
+	if repair:
+		for when in manual_repair[repair]:
 			plt.axvline(x=when, color="black", linestyle="--")
+<<<<<<< HEAD
 
 	if not 'ax' in kwargs:
 		M.refresh()
+=======
+	'''
+	M.refresh()
+>>>>>>> 69d4798b1e74541350722d1b01ec1a01a9e9d092
 
 def ax(fig):
 	return M.get_ax(fig)

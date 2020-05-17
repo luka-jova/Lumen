@@ -1,0 +1,85 @@
+Setting up backend to TkAgg
+Please select machine to be velocity diagnosed and sensor to be plotted
+Select machine:
+[1] FL01
+[2] FL02
+[3] FL03
+[4] FL04
+[5] FL05
+[6] FL06
+[7] FL07
+[8] debug-machine
+Select sensor:
+[1] drive_gear_V_eff
+[2] drive_motor_V_eff
+[3] drive_wheel_V_eff
+[4] idle_wheel_V_eff
+[5] lifting_gear_V_eff
+[6] lifting_motor_V_eff
+[7] drive_gear_a_max
+[8] drive_motor_a_max
+[9] drive_wheel_a_max
+[10] idle_wheel_a_max
+[11] lifting_gear_a_max
+[12] lifting_motor_a_max
+Selected: FL04 drive_gear_V_eff
+Loading from data/FL04/drive_gear_V_eff.csv
+data/FL04/drive_gear_V_eff.csv loaded successfully
+Loading from data/FL04/drive_motor_V_eff.csv
+data/FL04/drive_motor_V_eff.csv loaded successfully
+Loading from data/FL04/drive_wheel_V_eff.csv
+data/FL04/drive_wheel_V_eff.csv loaded successfully
+Loading from data/FL04/idle_wheel_V_eff.csv
+data/FL04/idle_wheel_V_eff.csv loaded successfully
+Loading from data/FL04/lifting_gear_V_eff.csv
+data/FL04/lifting_gear_V_eff.csv loaded successfully
+Loading from data/FL04/lifting_motor_V_eff.csv
+data/FL04/lifting_motor_V_eff.csv loaded successfully
+Loading from data/FL04/drive_gear_a_max.csv
+data/FL04/drive_gear_a_max.csv loaded successfully
+Loading from data/FL04/drive_motor_a_max.csv
+data/FL04/drive_motor_a_max.csv loaded successfully
+Loading from data/FL04/drive_wheel_a_max.csv
+data/FL04/drive_wheel_a_max.csv loaded successfully
+Loading from data/FL04/idle_wheel_a_max.csv
+data/FL04/idle_wheel_a_max.csv loaded successfully
+Loading from data/FL04/lifting_gear_a_max.csv
+data/FL04/lifting_gear_a_max.csv loaded successfully
+Loading from data/FL04/lifting_motor_a_max.csv
+data/FL04/lifting_motor_a_max.csv loaded successfully
+Running velocity diagnosis for machine: FL04
+..drive_gear_V_eff: Good
+....Good/all: 20438/20438 = 1.0
+....Satisfactory/all: 0/20438 = 0.0
+....Unsatisfactory/all: 0/20438 = 0.0
+....Unacceptable/all: 0/20438 = 0.0
+..drive_motor_V_eff: Satisfactory
+....Good/all: 45/20612 = 0.002183194255773336
+....Satisfactory/all: 20567/20612 = 0.9978168057442267
+....Unsatisfactory/all: 0/20612 = 0.0
+....Unacceptable/all: 0/20612 = 0.0
+..drive_wheel_V_eff: Good
+....Good/all: 20407/20407 = 1.0
+....Satisfactory/all: 0/20407 = 0.0
+....Unsatisfactory/all: 0/20407 = 0.0
+....Unacceptable/all: 0/20407 = 0.0
+..idle_wheel_V_eff: Good
+....Good/all: 20293/20293 = 1.0
+....Satisfactory/all: 0/20293 = 0.0
+....Unsatisfactory/all: 0/20293 = 0.0
+....Unacceptable/all: 0/20293 = 0.0
+..lifting_gear_V_eff: Good
+....Good/all: 27183/27183 = 1.0
+....Satisfactory/all: 0/27183 = 0.0
+....Unsatisfactory/all: 0/27183 = 0.0
+....Unacceptable/all: 0/27183 = 0.0
+..lifting_motor_V_eff: Good
+....Good/all: 27678/27678 = 1.0
+....Satisfactory/all: 0/27678 = 0.0
+....Unsatisfactory/all: 0/27678 = 0.0
+....Unacceptable/all: 0/27678 = 0.0
+Machine FL04 is working: Satisfactory
+..Good/all: 116044/136611 = 0.8494484338742854
+..Satisfactory/all: 20567/136611 = 0.15055156612571463
+..Unsatisfactory/all: 0/136611 = 0.0
+..Unacceptable/all: 0/136611 = 0.0
