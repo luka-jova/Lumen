@@ -174,7 +174,6 @@ def Plot1d(to_plot, **kwargs):
 				args['ax'] = ax
 		if fig:
 			M.addplot(fig, line, data, args)
-	plt.show(block = False)
 
 def Plot2d(to_plot, **kwargs):
 	if not 'ax' in kwargs:
@@ -207,7 +206,6 @@ def Plot2d(to_plot, **kwargs):
 			args['ax'] = ax
 
 def PlotTime(to_plot, repair, **kwargs):#show_repair = True, figure = None, name = 'unknown', feature = 'basic', window = '10d', ls = None):
-
 	if not 'ax' in kwargs:
 	 	kwargs['ax'] =  M.get_ax(kwargs.get('figure', None))
 	args = {k: v for k, v in {
