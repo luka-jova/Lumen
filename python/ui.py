@@ -152,7 +152,8 @@ def run_diagnosis_screen():
 	
 	# SELECTING INTERVAL
 	start_ts, end_ts = input_time_interval(end_ts)
-	main.run(estimator, start_ts, end_ts, export, verbose)
+	print(vars(estimator), start_ts, end_ts, export, verbose)
+	main.run(estimator, verbose, export, start_ts, end_ts)
 		
 def eme_screen():
 	pass
