@@ -307,7 +307,6 @@ class OneFig:
 	def load(self, ax):
 		for line, data, args in self.plot_history:
 			args['ax'] = ax
-			print(line)
 			eval(line)
 		for text in self.text_history:
 			args = {}
@@ -388,8 +387,3 @@ def Merge(L):
 # -------------------------
 
 # -------------------------
-
-
-def testna():
-	plt.text(1, 1, 'proba\nproba\n')
-	plt.show()
