@@ -7,6 +7,7 @@ import obrada
 import data_filter
 from measurement import Measurement
 import matplotlib
+from datetime import datetime
 
 matplotlib.use('TkAgg')
 
@@ -71,6 +72,7 @@ PlotCon
 '''
 
 manual_repair = data_filter.manual_repair
+FORMAT = ''
 
 # Gets data from data folder
 
@@ -203,7 +205,7 @@ def Plot2d(to_plot, **kwargs):
 		if 'ax' not in args:
 			args['ax'] = ax
 
-def PlotTime(to_plot, **kwargs):#show_repair = True, figure = None, name = 'unknown', feature = 'basic', window = '10d', ls = None):
+def PlotTime(to_plot, repair, **kwargs):#show_repair = True, figure = None, name = 'unknown', feature = 'basic', window = '10d', ls = None):
 
 	args = {k: v for k, v in {
 		'ax' 		: kwargs.get('ax', M.get_ax(kwargs.get('figure', None))),
@@ -225,12 +227,17 @@ def PlotTime(to_plot, **kwargs):#show_repair = True, figure = None, name = 'unkn
 			data.reset_index(inplace = True)
 			args['x'] = data.columns[0]
 			args['y'] = data.columns[1]
+			data[data.columns[0]] = pd.to_datetime(data[data.columns[0]], format='%Y-%m-%d %H:%M:%S.%f')
 		ax = data.plot(**args)
 		line = 'data.plot(**args)'
 		if fig:
 			M.addplot(fig, line, data, args)
 		if 'ax' not in args:
 			args['ax'] = ax
+	if repair:
+		for when in manual_repair[repair]:
+			x = datetime.strptime(when, '%Y-%m-%d %H:%M:%S.%f')
+			args['ax'].axvline(x = x, color = "black", linestyle="--")
 
 #repair = 'what machine'
 #repair = 'FL01'
@@ -275,18 +282,14 @@ def Plot(data = [], machine = None, sensors = [], **kwargs):
 	else:
 		print('There is no data to plot')
 
+	repair = kwargs.get('repair', machine)
+
 	if datatype == "TIME":
-		PlotTime(to_plot, **kwargs)
+		PlotTime(to_plot, repair, **kwargs)
 	elif datatype == '1d':
 		Plot1d(to_plot, **kwargs)
 	elif datatype == '2d':
 		Plot2d(to_plot, **kwargs)
-
-	repair = kwargs.get('repair', machine)
-
-	if repair:
-		for when in manual_repair[repair]:
-			plt.axvline(x=when, color="black", linestyle="--")
 
 	if not 'ax' in kwargs:
 		M.refresh()
