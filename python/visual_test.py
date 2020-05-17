@@ -278,10 +278,11 @@ def Plot(data = [], machine = None, sensors = [], **kwargs):
 		Plot2d(to_plot, **kwargs)
 
 	repair = kwargs.get('repair', machine)
+	'''
 	if repair:
 		for when in manual_repair[repair]:
 			plt.axvline(x=when, color="black", linestyle="--")
-
+	'''
 	M.refresh()
 
 def ax(fig):
