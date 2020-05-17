@@ -1,5 +1,8 @@
 import data_filter as df
 import dataset_loader as dl
+import variables_loader as vl
+from estimator import Estimator
+import main
 from os import listdir
 import os.path
 from sys import exit
@@ -96,6 +99,7 @@ def welcome_screen():
 		run[select("Welcome! Select an action.", options) - 1]()
 
 def run_diagnosis_screen():
+	# LOADING MEASUREMENTS, FINDING THE LAST TIMESTAMP
 	print("Loading the measurements, please wait.")
 	try:
 		end_ts = 0 # last timestamp in dataset
@@ -112,27 +116,44 @@ def run_diagnosis_screen():
 	end_ts = int(end_ts) - end_ts % (3600*24) + 3600.0 * 24
 	print()
 	
+	# EXPORT DETAILS PROMPT
 	export = select("How do you want diagnosis to be exported?", ["PDF", "In terminal"])
+	export = ("PDF", "Terminal")[export - 1] # convert to correct argument for main.run()
 	
-	ext = "" # file extension without leading '.'
+	# SELECTING ESTIMATOR CONFIGURATION
+	ext = "config" # file extension without leading '.'
 	CONFIG_DIR_PATH = "config/"
-	while not (os.path.isdir(CONFIG_DIR_PATH) and ests):
-		print("Please enter the name of config files' directory")
-		CONFIG_DIR_PATH = input(PROMPT)
-		if not os.path.isdir(CONFIG_DIR_PATH):
-			continue
-		ests = [it[:-len(ext) - 1] for it in listdir(CONFIG_DIR_PATH) if it.endswith(ext)]
-	est = select("Please select estimator:", ests)
+	config_confirmed = False
+	while not config_confirmed:
+		ests = [] # every time a config is rejected, load again so user can copy in meantime
+		while not (os.path.isdir(CONFIG_DIR_PATH) and ests):
+			while not os.path.isdir(CONFIG_DIR_PATH):
+				print("Please enter the name of config files' directory")
+				CONFIG_DIR_PATH = input(PROMPT)
+			ests = [it[:-len(ext) - 1] for it in listdir(CONFIG_DIR_PATH) if it.endswith(ext)]
+		est = select("Please select estimator:", ests)
+		print("Settings for estimator", ests[est - 1])
+		if not CONFIG_DIR_PATH.endswith('/'): CONFIG_DIR_PATH += '/'
+		file_path = CONFIG_DIR_PATH + ests[est - 1] + '.' + ext
+		with open(file_path, 'r', encoding="utf-8") as config_file:
+			print(config_file.read())
+		config_confirmed = select("\nTake this estimator?", ["Yes", "No"]) == 1
 	
+	# PRINT DETAILS PROMPT
 	verbose = select("Show details?", ["Yes, show details", "No"]) == 1
 	
-	machines = [it for it in df.list_machines if 'debug' not in it]
+	# SELECTING MACHINE
+	machines = [it for it in df.list_machines if "debug" not in it]
 	machine = select("Select machine:", machines)
-	
-	start_ts, end_ts = input_time_interval(end_ts)
-	exit()
 		
-
+	# LOADING ESTIMATOR CONFIGURATION
+	estimator = Estimator(machines[machine - 1])
+	vl.load_estimator(file_path, estimator)
+	
+	# SELECTING INTERVAL
+	start_ts, end_ts = input_time_interval(end_ts)
+	main.run(estimator, start_ts, end_ts, export, verbose)
+		
 def eme_screen():
 	pass
 
@@ -143,7 +164,7 @@ def add_data_screen():
 			src_path = input(PROMPT)
 			if not os.path.isfile(src_path) or not src_path.endswith('csv'):
 				raise IOError
-			dl.split_into_attr_tree(src_path, dl.ATTR_TREE_PATH, ["machine_name", "sensor_type"])
+			dl.split_into_attr_tree(src_path, dl.ATTR_TREE_PATH, ["machine_name", "sensor_type"], True)
 			break
 		except KeyboardInterrupt:
 			exit()

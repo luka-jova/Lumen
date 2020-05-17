@@ -1,6 +1,8 @@
 from ast import literal_eval
+from estimator import Estimator, Classification
+from numpy import array
 
-CONFIG_FILE_PATH = ".config"
+CONFIG_FILE_PATH = "config/.config"
 
 def keep_primitives(from_dict, which=None, keep_types=(str, int, float, dict, set, list, tuple, bool)):
 	"""Helper function for filtering variables to load or store
@@ -50,4 +52,36 @@ def load_variables(which=None, to_dict=globals(), from_file_path=CONFIG_FILE_PAT
 def store_variables(which=None, from_dict=globals(), to_file_path=CONFIG_FILE_PATH):
 	with open(to_file_path, 'w', encoding="utf-8") as config_file:
 		config_file.write(str(keep_primitives(from_dict, which)))
+
+def store_estimator(to_file_path, src_est):
+	variables_to_store = {
+		"best_mu" : { key : list(value) for key, value in src_est.best_mu },
+		"best_sigma2" : { key : list(value) for key, value in src_est.best_sigma2 },
+		"vel_classification" : [vars(it) for it in src_est.vel_classification],
+		"acc_classification" : [vars(it) for it in src_est.acc_classification],
+		"RUN_V_CATEGORIZATION" : src_est.RUN_V_CATEGORIZATION,
+		"RUN_A_CATEGORIZATION" : src_est.RUN_A_CATEGORIZATION,
+		"RUN_CATEGORIZATION_NEW_DATA" : src_est.RUN_CATEGORIZATION_NEW_DATA,
+		"RUN_CATEGORIZATION_ALL_DATA" : src_est.RUN_CATEGORIZATION_ALL_DATA,
+		"RUN_COMPATIBILITY_LAST_DAY" : src_est.RUN_COMPATIBILITY_LAST_DAY,
+		"RUN_COMPATIBILITY_LAST_WEEK" : src_est.RUN_COMPATIBILITY_LAST_WEEK,
+		"RUN_COMPATIBILITY_LAST_N_DAYS" : src_est.RUN_COMPATIBILITY_LAST_N_DAYS,
+		"RUN_COMPATIBILITY_BEST_FIT" : src_est.RUN_COMPATIBILITY_BEST_FIT,
+		"REFERENT_LAST_N_DAYS" : src_est.REFERENT_LAST_N_DAYS
+	}
+	store_variables(None, variables_to_store, to_file_path)
+
+def load_estimator(from_file_path, dest_est):
+	variables_to_load = {}
+	load_variables(None, variables_to_load, from_file_path)
+	for key, value in variables_to_load.items():
+		if key in ("best_mu", "best_sigma2"):
+			for sensor in value:
+				value[sensor] = array(value[sensor])
+		elif "classification" in key:
+			value = [Classification(**it) for it in value]
+		setattr(dest_est, key, value)
+	
+	
+
 
