@@ -141,7 +141,7 @@ def Convert_measurements(L, y = 'unknown'):
 # list of numbers
 def Plot1d(to_plot, **kwargs):
 	args = {k: v for k, v in {
-		'ax' 		: M.get_ax(kwargs.get('figure', None)),
+		'ax' 		: kwargs.get('ax', M.get_ax(kwargs.get('figure', None))),
 		'kind'		: kwargs.get('kind', 'scatter'),
 		'color' 	: kwargs.get('color', None),
 		's'     	: kwargs.get('s', None),
@@ -174,7 +174,7 @@ def Plot1d(to_plot, **kwargs):
 
 def Plot2d(to_plot, **kwargs):
 	args = {k: v for k, v in {
-		'ax' 		: M.get_ax(kwargs.get('figure', None)),
+		'ax' 		: kwargs.get('ax', M.get_ax(kwargs.get('figure', None))),
 		'kind'		: kwargs.get('kind', 'scatter'),
 		'color' 	: kwargs.get('color', None),
 		's'     	: kwargs.get('s', None),
@@ -202,7 +202,7 @@ def Plot2d(to_plot, **kwargs):
 def PlotTime(to_plot, **kwargs):#show_repair = True, figure = None, name = 'unknown', feature = 'basic', window = '10d', ls = None):
 
 	args = {k: v for k, v in {
-		'ax' 		: M.get_ax(kwargs.get('figure', None)),
+		'ax' 		: kwargs.get('ax', M.get_ax(kwargs.get('figure', None))),
 		's'     	: kwargs.get('s', None),
 		'color' 	: kwargs.get('color', None),
 		'kind'		: kwargs.get('kind', 'line'),
