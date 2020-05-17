@@ -206,6 +206,7 @@ def PlotTime(to_plot, **kwargs):#show_repair = True, figure = None, name = 'unkn
 		's'     	: kwargs.get('s', None),
 		'color' 	: kwargs.get('color', None),
 		'kind'		: kwargs.get('kind', 'line'),
+		'marker'    : kwargs.get('marker', None),
 		'ls' 		: kwargs.get('ls', None),
 		'legend' 	: kwargs.get('legend', None)
 	}.items() if v is not None}
