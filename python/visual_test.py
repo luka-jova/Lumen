@@ -3,15 +3,18 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
 from datetime import datetime
-import obrada as ob
-import data_filter as df
+import obrada
+import data_filter
 from measurement import Measurement
 
+matplotlib.use('TkAgg')
 
-RECOMMENDED_MATPLOTLIB_BACKEND = "TkAgg"
-if matplotlib.get_backend() != RECOMMENDED_MATPLOTLIB_BACKEND:
-	print("Setting up backend to TkAgg")
-	matplotlib.use(RECOMMENDED_MATPLOTLIB_BACKEND)
+# u test.py su primjeri nekih poziva
+
+'''
+get_ax(figure)
+get_fig(figure)
+'''
 
 '''
 Pass data to Plot
@@ -25,13 +28,17 @@ ex. Plot(data = [1, 2, 3, 4])
 2* specify machine and list of sensors to Plot
 	Plot(machine = 'FL02') - plots all sensors of FL02
 	Plot(machine = 'FL02', sensors = ['idle_wheel_V_eff', 'drive_wheel_a_max'])
+
 additional arguments:
-	figure	- positive integer specifies figure to plot on
+	figure	- label
+
 	name	- give name to current data
 	feature - 'rol-mean', 'rol-skew', 'rol-std'
 			- this is used for plotting sensors or list of measurements
 	window  - size of rolling window for rolling features (default is '10d' meaning 10 days)
 	kind = 'scatter', 'hist', 'line', 'density' ...
+	legend - True or False
+
 	additional arguments for:
 		* kind = 'scatter':
 			s - size of points (ex. s = 10)
@@ -48,6 +55,7 @@ additional arguments:
 		* kind = 'density'     visualizes histogram with line
 		 	ls
 			color
+
 calls:
 Plot(machine = 'FL03', feature = 'rol-mean')
 Plot(machine = 'FL02', sensors = ['drive_motor_V_eff', 'drive_gear_V_eff'], feature = 'rol-skew')
@@ -60,10 +68,11 @@ Plot(data = [3, 2, 2.3, 3.1, 3.2, 1.2, 4, 5, 4.2], kind = 'density', ls = '--', 
 PlotCon
 '''
 
-manual_repair = df.manual_repair
+
+manual_repair = data_filter.manual_repair
+FORMAT = ''
 
 # Gets data from data folder
-
 
 def PlotC(X, Y, Z):
 	'''delta = 0.025
@@ -106,9 +115,14 @@ features = {
 }
 
 def ApplyFeature(data, feature, window):
-	features[feature](data, window)
+	if len(data.columns) > 1:
+		data.set_index(data.columns[0], inplace = True)
+		features[feature](data, window)
+		data.reset_index(inplace = True)
+	else:
+		features[feature](data, window)
 
-def Convert_dates(L, y = 'unknown'):
+def Convert_measurements(L, y = 'unknown'):
 	res = pd.DataFrame(columns = ('timestamp', 'value'))
 
 	data = []
@@ -126,88 +140,135 @@ def Convert_dates(L, y = 'unknown'):
 
 # list of numbers
 def Plot1d(to_plot, **kwargs):
+	if not 'ax' in kwargs:
+	 	kwargs['ax'] =  M.get_ax(kwargs.get('figure', None))
 	args = {k: v for k, v in {
-		'ax' 		: M.get_ax(kwargs.get('figure', -1)),
+		'ax' 		: kwargs['ax'],
 		'kind'		: kwargs.get('kind', 'scatter'),
 		'color' 	: kwargs.get('color', None),
 		's'     	: kwargs.get('s', None),
 		'ls'     	: kwargs.get('ls', None),
 		'marker'    : kwargs.get('marker', None),
-		'bins'		: kwargs.get('bins', None)
+		'bins'		: kwargs.get('bins', None),
+		'legend' 	: kwargs.get('legend', None)
 	}.items() if v is not None}
+
+	feature = kwargs.get('feature', 'basic')
+	window 	= kwargs.get('window', 10)
+	fig 	= kwargs.get('figure', None)
 
 	for data in to_plot:
-		print(args)
-		print(data)
+		ApplyFeature(data, feature, window)
+		line = ''
 		if args['kind'] in ['density', 'hist']:
-			data.plot(**args)
+			ax = data.plot(**args)
+			if 'ax' not in args:
+				args['ax'] = ax
+			line = 'data.plot(**args)'
 		else:
 			data['y'] = 0
-			args['kind'] = 'scatter'
-			if not 's' in args.keys():
+			if not 's' in args:
 				args['s'] = 30
-			data.plot(x = data.columns[0], y = data.columns[1], **args)
-	plt.show(block = False)
+			line = 'data.plot(x = data.columns[0], y = data.columns[1], **args)'
+			ax = data.plot(x = data.columns[0], y = data.columns[1], **args)
+			if 'ax' not in args:
+				args['ax'] = ax
+		if fig:
+			M.addplot(fig, line, data, args)
 
 def Plot2d(to_plot, **kwargs):
+	if not 'ax' in kwargs:
+	 	kwargs['ax'] =  M.get_ax(kwargs.get('figure', None))
 	args = {k: v for k, v in {
-		'ax' 		: M.get_ax(kwargs.get('figure', -1)),
+		'ax' 		: kwargs['ax'],
 		'kind'		: kwargs.get('kind', 'scatter'),
 		'color' 	: kwargs.get('color', None),
 		's'     	: kwargs.get('s', None),
 		'ls'     	: kwargs.get('ls', None),
 		'marker'    : kwargs.get('marker', None),
-		'gridsize'	: kwargs.get('gridsize', None)
+		'gridsize'	: kwargs.get('gridsize', None),
+		'legend' 	: kwargs.get('legend', None)
 	}.items() if v is not None}
+
+	feature = kwargs.get('feature', 'basic')
+	window 	= kwargs.get('window', 10)
+	fig 	= kwargs.get('figure', None)
+
 	if args['kind'] == 'hexbin':
-		if not 'gridsize' in args.keys():
+		if not 'gridsize' in args:
 			args['gridsize'] = 15
-	for df in to_plot:
-		print(df)
-		ax = df.plot(x = df.columns[0], y = df.columns[1],  **args)
-		args['ax'] = ax
+	for data in to_plot:
+		ApplyFeature(data, feature, window)
+		line = 'data.plot(x = data.columns[0], y = data.columns[1],  **args)'
+		ax = data.plot(x = data.columns[0], y = data.columns[1],  **args)
+		if fig:
+			M.addplot(fig, line, data, args)
+		if 'ax' not in args:
+			args['ax'] = ax
 
-def PlotTime(to_plot, **kwargs):#show_repair = True, figure = None, name = 'unknown', feature = 'basic', window = '10d', ls = None):
-
+def PlotTime(to_plot, repair, **kwargs):#show_repair = True, figure = None, name = 'unknown', feature = 'basic', window = '10d', ls = None):
+	if not 'ax' in kwargs:
+	 	kwargs['ax'] =  M.get_ax(kwargs.get('figure', None))
 	args = {k: v for k, v in {
-		'ax' : M.get_ax(kwargs.get('figure', -1)),
+		'ax' 		: kwargs['ax'],
+		's'     	: kwargs.get('s', None),
 		'color' 	: kwargs.get('color', None),
-		'ls' : kwargs.get('ls', None)
+		'kind'		: kwargs.get('kind', 'line'),
+		'marker'    : kwargs.get('marker', None),
+		'ls' 		: kwargs.get('ls', None),
+		'legend' 	: kwargs.get('legend', None)
 	}.items() if v is not None}
 
 	feature = kwargs.get('feature', 'basic')
 	window 	= kwargs.get('window', '10d')
+	fig 	= kwargs.get('figure', None)
 
-	for df in to_plot:
-		ApplyFeature(df, feature, window)
-		ax = df.plot(**args)
-		args['ax'] = ax
+	for data in to_plot:
+		ApplyFeature(data, feature, window)
+		if args['kind'] == 'scatter':
+			data.reset_index(inplace = True)
+			args['x'] = data.columns[0]
+			args['y'] = data.columns[1]
+			data[data.columns[0]] = pd.to_datetime(data[data.columns[0]], format='%Y-%m-%d %H:%M:%S.%f')
+		ax = data.plot(**args)
+		line = 'data.plot(**args)'
+		if fig:
+			M.addplot(fig, line, data, args)
+		if 'ax' not in args:
+			args['ax'] = ax
+	if repair:
+		for when in manual_repair[repair]:
+			x = datetime.strptime(when, '%Y-%m-%d %H:%M:%S.%f')
+			args['ax'].axvline(x = x, color = "black", linestyle="--")
 
-	M.refresh()
-	print('Finished')
+#repair = 'what machine'
+#repair = 'FL01'
 
 def Plot(data = [], machine = None, sensors = [], **kwargs):
+
+	data = data.copy()
 	to_plot = []
 	datatype = None
 
 	if machine:
 		datatype = "TIME"
 		if not len(sensors):
-			for sensor in ob.list_sensors[machine]:
+			for sensor in obrada.list_sensors[machine]:
 				sensors.append(sensor)
 		print('Plotting sensors...')
 		for sensor in sensors:
 			temp = []
-			df.filtered_data(temp, machine, sensor)
-			temp = Convert_dates(temp, f'{machine} - {sensor}')
+			data_filter.filtered_data(temp, machine, sensor)
+			temp = Convert_measurements(temp, f'{machine} - {sensor}')
 			print(f'{machine} - {sensor}')
 			to_plot.append(temp)
 	elif len(data):
 		name = kwargs.get('name', 'unknown')
 		print('Plotting data...')
-		if isinstance(data[0], Measurement): 
+
+		if isinstance(data, list) and isinstance(data[0], Measurement):
 			datatype = "TIME"
-			to_plot.append(Convert_measurements(data, name, feature))
+			to_plot.append(Convert_measurements(data, name))
 		else:
 			data = pd.DataFrame(data)
 			if len(data.columns) == 1:
@@ -223,58 +284,116 @@ def Plot(data = [], machine = None, sensors = [], **kwargs):
 	else:
 		print('There is no data to plot')
 
+	repair = kwargs.get('repair', machine)
+
 	if datatype == "TIME":
-		PlotTime(to_plot, **kwargs)
+		PlotTime(to_plot, repair, **kwargs)
 	elif datatype == '1d':
 		Plot1d(to_plot, **kwargs)
 	elif datatype == '2d':
 		Plot2d(to_plot, **kwargs)
-	
-	if machine:
-		for when in manual_repair[machine]:
-			plt.axvline(x=when, color="black", linestyle="--")
-	
 	M.refresh()
 
+def ax(fig):
+	return M.get_ax(fig)
+def fig(fig):
+	return M.get_fig(fig)
+
+class OneFig:
+
+	label = ''
+	plot_history = []
+	text_history = []
+
+	def __init__(self, fig):
+		self.label = fig
+		self.plot_history = []
+		self.text_history = []
+
+	def addplot(self, line, data, args):
+		self.plot_history.append([line, data.copy(), args.copy()])
+	def addtext(self, text):
+		line = 'ax.plt(x, y, text, transform = ax.transAxes, **args)'
+	def load(self, ax):
+		for line, data, args in self.plot_history:
+			args['ax'] = ax
+			eval(line)
+		for text in self.text_history:
+			args = {}
+			x = .25
+			y = .25
+			#eval(line)
+
+# fig - label
+# figure - real Figure object
+
 class Manager:
+	fignum = {}
+	figdata = {}
+
 	def __init__(self):
 		plt.close('all')
+
+	def makefig(self, fig):
+		L = [0] + plt.get_fignums()
+		if not fig:
+			fig = 1
+			while fig in self.fignum:
+				fig += 1
+		self.figdata[fig] = OneFig(fig)
+		self.fignum[fig] = L[-1] + 1
+
 	def get_ax(self, fig):
-		if fig not in plt.get_fignums():
+		if self.fignum.get(fig, None) not in plt.get_fignums():
+			self.makefig(fig)
 			return None
-		return plt.figure(fig).get_axes()[0]
+		return plt.figure(self.fignum.get(fig, fig)).get_axes()[0]
+	def get_fig(self, fig):
+		if fig not in self.fignum:
+			return None
+		return plt.figure(self.fignum[fig])
+
+	def addplot(self, fig, line, data, args):
+		try:
+			self.figdata[fig].addplot(line, data, args)
+		except:
+			print(f'Figure named {fig} does not exist.')
+
+	def addtext(self, fig, text):
+		try:
+			self.figdata[fig].addtext(text)
+		except:
+			print(f'Figure named {fig} does not exist.')
+
+	def load(self, fig, ax):
+		try:
+			self.figdata[fig].load(ax)
+		except:
+			print(f'Figure named {fig} does not exist.')
+
 	def refresh(self):
-		plt.show(block = False)
+		for title in self.fignum:
+			self.get_fig(title).canvas.set_window_title(title)
+			self.get_fig(title).show()
 
 M = Manager()
 
+def Merge(L):
+	n = len(L)
+	m = len(L[0])
+
+	fig, axs = plt.subplots(n, m, tight_layout = True)
+	for i in range(n):
+		for j in range(m):
+			if L[i][j] != 't':
+ 				M.load(L[i][j], axs[i, j])
+			else:
+				axs[i, j].axis('off')
+	plt.show(block = False)
+
+	return (fig, axs)
+
 
 # -------------------------
 
 # -------------------------
-
-
-def Plot_data(machine = 'FL01', sensor = ob.list_sensors['FL01'][2]):
-
-	filename = f"data/{machine}/{sensor}.csv"
-
-	file = None
-	try:
-		file = open(filename, 'r', encoding = 'utf-8-sig')
-	except:
-		print('Failed to find data')
-		return []
-
-	column_names = file.readline().strip('\n').split(';')
-	column_names = list(map(lambda s: s.strip('"'), column_names))
-
-	data = pd.read_csv(file, sep = ';', names = column_names)
-
-	x = 'start_timestamp'
-	y = 'realvalue'
-
-	data = data[[x, y]]
-	data.start_timestamp = pd.to_datetime(data[x], format='%Y-%m-%d %H:%M:%S.%f')
-	data.set_index([x], inplace = True)
-
-	return data

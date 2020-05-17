@@ -1,0 +1,55 @@
+********************************************
+***************BRANCH-evi*******************
+********************************************
+
+git status
+#pogledaj u kojem si branchu, koji su fileovi dodani/mijenjani
+
+git branch <branch-name>
+#stvori na lokalnom repozitoriju novi branch koji se zove branch-name (trenutni branch je i dalje isti)
+
+git checkout <branch-name>
+#promijeni branch u branch-name
+
+	git checkout -b <branch-name>
+	#ako ste poceli raditi neke promjene i skuzili da bi oni zapravo trebali ici u neki novi branch
+	#onda ce ovo napraviti novi branch i sve promjene prebaciti u taj novi branch koji se zove branch-name
+
+********************************************
+***********SPREMANJE PROMJENA***************
+********************************************
+
+git add .
+git commit -m "kratka poruka sto je promijenjeno"
+
+git push <remote> <branch>
+#NIKAD NE PUSH-ati master
+#ex: git push origin feat-adding-python
+#ovo prebacuje branch sa lokalnog na remote repozitorij (nije bitno iz kojeg branch-a se poziva, bitno je koji branch se push-a)
+
+********************************************
+******DOHVACANJE PROMJENA S REMOTE-a********
+********************************************
+git pull <remote> <remote-branch>
+#povuci ce remote-branch s remote repozitorija u trenutni branch (bitno je da smo u dobrom trenutnom branchu)
+#ex:
+#git status
+#->on branch nova-grana
+#git pull origin feat-adding-python
+#->ovo ce u lokalni branch nova-grana prebaciti feat-adding-python
+#ALI: zelimo da se branch-evi zovu isto na remote repo-u kao i na local repo-u
+#dakle poziv iz branch-a nova-grana bi trebao biti git pull origin nova-grana
+
+********************************************
+*************GENERALNO*********************
+********************************************
+
+UVIJEK PROVJERITI NA KOJEM SI BRANCH-u (ne raditi promjene na masteru nego otici na feature branch)
+UVIJEK POZVATI pull PRIJE POCETKA RADA -> git status moze davati poruku "Your branch is up to date with origin/branchname", ali to ne znaci da na remote repozitoriju nije bilo nikakvih promjena.
+NIKAD NE PUSH-ati na master (u master merge-amo stvari... dakle ako dvoje ljudi prcka po istom file-u, onda ako to rade u razlicitim branchevima nece imati problema pri push-anju, a kasnije cemo obje promjene spojiti tako sto cemo sve merge-ati u master)
+
+
+
+********************************************
+********************************************
+********************************************

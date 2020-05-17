@@ -3,6 +3,9 @@ from numpy import inf
 import numpy as np
 import dataset_loader as dl
 
+def to_date(timestamp):
+	return dt.fromtimestamp(timestamp).strftime("%Y-%m-%d")
+
 def to_timestamp(s, is_interval = False):
 	if is_interval:
 		result = 0.
@@ -60,8 +63,10 @@ def filtered_data(dest_list, machine, sensor, start = 0, duration = None, end = 
 		Maximum value of measurement's realvalue
 	mix_val : float or int
 		Minimum value of measurement's realvalue
+
 	Only dest_list, machine and sensor arguments are mandatory.
 	If duration is set, the 'end' argument is ignored
+
 	Returns
 	-------
 	None
@@ -101,7 +106,7 @@ def get_measurements(dest_list, machine, sensor, keep_loaded = True, predicate =
 		if not keep_loaded:
 			del measurements[machine][sensor]
 		return
-	path = '/'.join(("data", machine, sensor)).replace("//", '/') + ".csv"
+	path = '/'.join((dl.ATTR_TREE_PATH, machine, sensor)).replace("//", '/') + ".csv"
 	if keep_loaded:
 		if machine not in measurements:
 			measurements[machine] = {}

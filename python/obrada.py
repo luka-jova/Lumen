@@ -10,12 +10,12 @@ MAX_DIFF = 30
 DATA_TREE_PATH = "data"
 
 list_V_sensors = [
-	"drive_gear_a_max",
-	"drive_motor_a_max",
-	"drive_wheel_a_max",
-	"idle_wheel_a_max",
-	"lifting_gear_a_max",
-	"lifting_motor_a_max"
+	"drive_gear_V_eff",
+	"drive_motor_V_eff",
+	"drive_wheel_V_eff",
+	"idle_wheel_V_eff",
+	"lifting_gear_V_eff",
+	"lifting_motor_V_eff"
 ]
 
 
@@ -41,7 +41,7 @@ list_sensors = {
 	"FL05": list_V_sensors + list_a_sensors,
 	"FL06": list_V_sensors + list_a_sensors,
 	"FL07": list_V_sensors + list_a_sensors,
-	"debug-machine": list_debug_sensors			
+	"debug-machine": list_debug_sensors
 }
 
 MAX_DIFF = 60
@@ -57,24 +57,6 @@ def separate_by_time(measurements_list, max_diff = MAX_DIFF):
     batches[-1].append(measurement)
   return batches
 
-def load_shared_data():
-  with open('prog_data.txt', 'r') as pd:
-    path, ordering = pd.readline().strip().split(':')
-    ordering = [int(i) for i in ordering.split(',')]
-    shared_data[path] = ordering
-    
-def save_shared_data():
-  with open('prog_data.txt', 'w') as pd:
-    for key in shared_data:
-      pd.write(':'.join([key, ','.join([str(i) for i in shared_data[key]])]))
-
-def randomize_blocks(path):
-  ms = []
-  dl.load_measurements(path, ms)
-  temp = separate_by_time(ms)
-  shared_data[path] = list(range(len(temp)))
-  shuffle(shared_data[path])
-
 #display function for checking time compatibility for time blocks between different sensors
 def check_time_compatibility(machine_name, sensor_list):
 	for cur_sensor in sensor_list:
@@ -89,14 +71,14 @@ def check_time_compatibility(machine_name, sensor_list):
 
 #sensor_data is a dictionary where
 #	 key = sensor_name
-#  val = list of time blocks for key, containing measurements 
+#  val = list of time blocks for key, containing measurements
 sensor_data = {}
 
 #load all eff_sensors for machine_name
 def load_machine(machine_name):
 	for cur_sensor in list_sensors[ machine_name ]:
 		load_sensor(machine_name, cur_sensor)
-		
+
 #load sensor_name for machine_name in sensor_data
 def load_sensor(machine_name, sensor_name):
 	tmp = []
@@ -118,7 +100,7 @@ def export_to_csv(machine_name, filename, data):
 
 #it is sufficient to call this function export_data_for_machine with a machine_name and it will:
 #1) load data for the machine_name
-#2) separate all sensors into timeblocks 
+#2) separate all sensors into timeblocks
 #3) synchronise timeblocks by ignoring the dangling ones (similiar to sweep line for now)
 #4) take effective (average for now) value for each timeblock
 #5) export all data to csv file where each row consists of: [start_timestamp end_timestamp eff_val1 eff_val2 ...]
@@ -130,18 +112,18 @@ def export_data_for_machine(machine_name):
 	else:
 		load_machine(machine_name)
 	#machine is now loaded, all its sensors are loaded in sensor_data dictionary
-	
+
 	output_data = []
-	
+
 	print("Ignored timeblocks:", go.generate_output_data(sensor_data, list_sensors[ machine_name ], output_data))
 	#generate_output has loaded the list output_data
-	
+
 	print("Timeblocks loaded:", len(output_data))
 	export_to_csv(machine_name, "-all-sensors", output_data)
-	
-shared_data = {}
-path_measurements_map = {}
 
+path_measurements_map = {}
+# TODO: rijesiti se ovoga i koristiti samo data_filter.get_measurements, prilagoditi
+# find_pearson_correlations (ne brisati tu metodu)
 def get_measurements(path, keep_loaded):
     if path in path_measurements_map:
         if keep_loaded:
@@ -169,7 +151,7 @@ def get_sensor_csv(dir_path, acc, filename_contains = ""):
             acc.append([])
             get_sensor_csv(dir_path + p, acc[-1], filename_contains)
 
-def find_correlations(paths, desired_corr_list, max_corr_time_dist, min_corr_coeff, keep_loaded):
+def find_pearson_correlations(paths, desired_corr_list, max_corr_time_dist, min_corr_coeff, keep_loaded):
 	measurements_j = get_measurements(paths[0], keep_loaded)
 	for i in range(len(paths) - 1):
 		measurements_i = measurements_j
@@ -201,20 +183,4 @@ def find_correlations(paths, desired_corr_list, max_corr_time_dist, min_corr_coe
 
 if __name__ == "__main__":
 	load_machine("FL01")
-	#proba
-  #dl.split_into_attr_tree("data-full.csv", "data", ["machine_name", "sensor_type"])
-  #randomize_blocks('data/FL01/drive_gear_a_max.csv')
-  # dodati loadanje i spremanje poretka u file i iz njega (npr randomize provoditi samo na onima
-  #dl.split_into_attr_tree("IoT_and_predictive_maintenance-full.csv", DATA_TREE_PATH, ["machine_name", "sensor_type"])
-  #apaths, vpaths = [], []
-  #get_sensor_csv(DATA_TREE_PATH, apaths, "a_max")
-  #interesting_correlations = []
-  #for machine_paths in apaths:
-  #    find_correlations(machine_paths, interesting_correlations, 3, 0.7, True)
-  #with open("corr.csv", 'w') as corr_file:
-  #    corr_file.write('"corr_coeff";"path1";"path2"\n')
-  #    for corr_coeff, path1, path2 in sorted(interesting_correlations):
-  #        print(corr_coeff, path1, path2)
-  #        corr_file.write(str(corr_coeff) + ';' + '"' + path1 + '"' + ';' + '"' + path2 + '"\n')
-    # randomize_blocks('data/FL01/drive_gear_a_max.csv')
-    # dodati loadanje i spremanje poretka u file i iz njega (npr randomize provoditi samo na onima
+

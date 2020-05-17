@@ -137,4 +137,5 @@ if __name__ == "__main__":
     # split_by_attr("IoT_and_predictive_maintenance-full.csv", "machine.csv", "machine_name")
     # split_by_line_number("machineFL02.csv", "machine2_batch.csv", 10)
 
-    split_into_attr_tree("data_full", ATTR_TREE_PATH, ["machine_name", "sensor_type"])
+    split_into_attr_tree("IoT_and_predictive_maintenance-full.csv", ATTR_TREE_PATH, ["machine_name", "sensor_type"])
+
