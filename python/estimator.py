@@ -20,14 +20,28 @@ class Estimator:
 	
 	'''
 	The next data should be loaded from .config file and not changed after the creation of estimator object
-	best_mu -> dictionary where key=sensor_name, val = numpy vector with one element
-	best_sigma2 -> dictionary where key=sensor_name, val = numpy vector with one element
-	machine_name
-	acc_sensor_list
-	vel_sensor_list
-	vel_classification
-	acc_classification
+	
+	Complex structures:
+		best_mu -> dictionary where key=sensor_name, val = numpy row vector with one element
+		best_sigma2 -> dictionary where key=sensor_name, val = numpy row vector with one element
+		
+		vel_classification
+		acc_classification
+		
+	Booleans:
+		RUN_V_CATEGORIZATION = True
+		RUN_A_CATEGORIZATION = True
+		RUN_CATEGORIZATION_NEW_DATA = True
+		RUN_CATEGORIZATION_ALL_DATA = True	
+		RUN_COMPATIBILITY_LAST_DAY = True 
+		RUN_COMPATIBILITY_LAST_WEEK = True
+		RUN_COMPATIBILITY_LAST_N_DAYS = True
+		RUN_COMPATIBILITY_BEST_FIT = True
+	
+	Integers:
+		REFERENT_LAST_N_DAYS = 30
 	'''
+	
 	best_mu = {
 		"lifting_motor_a_max": np.array([100.4])
 	}
@@ -59,7 +73,7 @@ class Estimator:
 		Classification(class_name = "Brado", min_val = 0, max_val = 500, color = "g", unit = "mg"),
 		Classification(class_name = "Oke", min_val = 500, max_val = 1000, color = "c", unit = "mg"),
 		Classification(class_name = "A_ono", min_val = 1000, max_val = 10000, color = "y", unit = "mg"),
-		Classification(class_name = "Kurcina", min_val = 10000, max_val = inf, color = "r", unit = "mg")		
+		Classification(class_name = "Lose", min_val = 10000, max_val = inf, color = "r", unit = "mg")		
 	]
 	
 	'''
