@@ -37,3 +37,5 @@ v.Plot(data = df, kind = 'line', figure = 'konj', name = 'mean', feature = 'rol-
 v.Plot(data = mlist, kind = 'scatter', marker = 'x', s = 0.1, color = 'r', figure = 'mes')
 v.Plot(data = mlist, figure = 'mes', kind = 'scatter', marker = 'x', s = 0.1, color = 'b', feature = 'rol-mean', window = '1d')
 v.Plot(data = mlist, figure = 'mes', kind = 'line',  color = 'y', feature = 'rol-mean', window = '15d')
+
+v.Merge([['konj', 'mes'], ['t', 't']])
