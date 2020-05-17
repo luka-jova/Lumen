@@ -3,7 +3,7 @@ import multiprocessing as mp
 import os.path
 import os
 from shutil import rmtree
-from measurement import Measurement
+from python.measurement import Measurement
 # pd.read_csv("IoT_and_predictive_maintenance-full.csv", sep = ';')
 
 
