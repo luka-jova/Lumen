@@ -1,10 +1,10 @@
 import dataset_loader as dl
+from data_filter import get_measurements
 import measurement as ms
 from random import shuffle
+from numpy import corrcoef
 import generate_output as go
-#import numpy as np
 import os, os.path
-#from scipy import stats
 
 MAX_DIFF = 30
 DATA_TREE_PATH = "data"
@@ -48,14 +48,14 @@ MAX_DIFF = 60
 # max_diff is maximum distance between starting time of
 # two measurements that can be in the same batch (in seconds)
 def separate_by_time(measurements_list, max_diff = MAX_DIFF):
-  batches = []
-  previous_timestamp = -max_diff - 1
-  for measurement in measurements_list:
-    if measurement.start_timestamp - previous_timestamp > max_diff:
-      batches.append([])
-    previous_timestamp = measurement.start_timestamp
-    batches[-1].append(measurement)
-  return batches
+	batches = []
+	previous_timestamp = -max_diff - 1
+	for measurement in measurements_list:
+		if measurement.start_timestamp - previous_timestamp > max_diff:
+			batches.append([])
+		previous_timestamp = measurement.start_timestamp
+		batches[-1].append(measurement)
+	return batches
 
 #display function for checking time compatibility for time blocks between different sensors
 def check_time_compatibility(machine_name, sensor_list):
@@ -70,8 +70,8 @@ def check_time_compatibility(machine_name, sensor_list):
 		print(len(sensor_data[ cur_sensor ]))
 
 #sensor_data is a dictionary where
-#	 key = sensor_name
-#  val = list of time blocks for key, containing measurements
+#	key = sensor_name
+#	val = list of time blocks for key, containing measurements
 sensor_data = {}
 
 #load all eff_sensors for machine_name
@@ -121,66 +121,83 @@ def export_data_for_machine(machine_name):
 	print("Timeblocks loaded:", len(output_data))
 	export_to_csv(machine_name, "-all-sensors", output_data)
 
-path_measurements_map = {}
-# TODO: rijesiti se ovoga i koristiti samo data_filter.get_measurements, prilagoditi
-# find_pearson_correlations (ne brisati tu metodu)
-def get_measurements(path, keep_loaded):
-    if path in path_measurements_map:
-        if keep_loaded:
-            return path_measurements_map[path]
-        else:
-            return path_measurements_map.pop(path)
-    else:
-        if keep_loaded:
-            path_measurements_map[path] = []
-            dl.load_measurements(path, path_measurements_map[path])
-            return path_measurements_map[path]
-        else:
-            temp = []
-            dl.load_measurements(path, temp)
-            return temp
-
-def get_sensor_csv(dir_path, acc, filename_contains = ""):
-    if not dir_path.endswith('/'): dir_path += '/'
-    files = os.listdir(dir_path)
-    for p in files:
-        if os.path.isfile(dir_path + p):
-            if p.endswith('.csv') and filename_contains in p:
-                acc.append(dir_path + p)
-        else:
-            acc.append([])
-            get_sensor_csv(dir_path + p, acc[-1], filename_contains)
-
-def find_pearson_correlations(paths, desired_corr_list, max_corr_time_dist, min_corr_coeff, keep_loaded):
-	measurements_j = get_measurements(paths[0], keep_loaded)
-	for i in range(len(paths) - 1):
+def find_pearson_correlations(machine, sensors, desired_corr_list, max_corr_time_dist, min_corr_coeff):
+	"""Calculates linear (Pearson's) correlation between pairs of sensors on a machine
+	
+	Parameters
+	----------
+	machine : str
+		machine for which the correlations are calculated
+	sensors : list[str]
+		names of sensors whose correlation is calculated
+	desired_corr_list : list
+		list in which are stored tuples (coeff, machine, sensor1, sensor2, number of entries)
+		where abs(coeff) > min_corr_coeff
+	max_corr_time_dist : int or float
+		maximum time difference between measurements of same index in sample
+	min_corr_coef : float
+		value in range [0, 1], determines high correleation (what will be stored in
+		desired_corr_list)
+		
+	Returns
+	-------
+	None
+	
+	Example
+	-------
+	# Determines correlation between all sensors for each machine, saves results
+	# whose absolute value of correlation coefficient is higher than 0.85 in csv file
+	data = []
+	for machine in list_sensors:
+		if "debug" in machine: continue
+		find_pearson_correlations(machine, list_sensors[machine], data, 3, 0.85)
+	data.sort()
+	with open("pearson.csv", 'w', encoding="utf-8") as fout:
+		fout.write("Coefficient;machine;sensor1;sensor2;number of entries\n")
+		fout.write('\n'.join([';'.join([str(cell) for cell in line]) for line in data]))
+	"""
+	measurements_j = []
+	get_measurements(measurements_j, machine, sensors[0])
+	for i in range(len(sensors) - 1):
 		measurements_i = measurements_j
-		for j in range(len(paths) - 1, i, -1):
-		      measurements_j = get_measurements(paths[j], keep_loaded)
-		      print("Correlating", paths[i], "and", paths[j])
-		      datasets = [[], []]
-		      k, l = 0, 0
-		      while k < len(measurements_i) and l < len(measurements_j):
-		          dist = measurements_i[k].end_timestamp - measurements_j[l].end_timestamp
-		          if abs(dist) < max_corr_time_dist:
-		              datasets[0].append(measurements_i[k].realvalue)
-		              datasets[1].append(measurements_j[l].realvalue)
-		              k += 1
-		              l += 1
-		          elif dist < 0:
-		              k += 1
-		          else:
-		              l += 1
-		      if len(datasets[0]) < 3:
-		          print("Not enough data to correlate")
-		          continue
+		for j in range(len(sensors) - 1, i, -1):
+			measurements_j = []
+			get_measurements(measurements_j, machine, sensors[j])
+			print("\nCorrelating", sensors[i], "and", sensors[j], "from", machine)
+			datasets = [[], []]
+			k, l = 0, 0
+			while k < len(measurements_i) and l < len(measurements_j):
+				dist = measurements_i[k].end_timestamp - measurements_j[l].end_timestamp
+				if abs(dist) < max_corr_time_dist:
+					datasets[0].append(measurements_i[k].realvalue)
+					datasets[1].append(measurements_j[l].realvalue)
+					k += 1
+					l += 1
+				elif dist < 0:
+					k += 1
+				else:
+					l += 1
+			if len(datasets[0]) < 3:
+				print("Not enough data to correlate")
+				continue
 
-		      corr_coeff, pvalue = stats.pearsonr(*datasets)
-		      if min_corr_coeff < abs(corr_coeff):
-		          print("############## IMPORTANT ###############")
-		          desired_corr_list.append((corr_coeff, paths[i], paths[j]))
-		      print("Correlation based on", len(datasets[0]), "corr_coeff =: ", corr_coeff)
+			corr_coeff = corrcoef(*datasets)[0][1]
+			if min_corr_coeff < abs(corr_coeff):
+				print("############## HIGH CORRELATION ###############")
+				desired_corr_list.append((corr_coeff, machine, sensors[i], sensors[j], len(datasets[0])))
+			print("Correlation based on", len(datasets[0]), "corr_coeff =: ", corr_coeff)
+		
 
 if __name__ == "__main__":
-	load_machine("FL01")
-
+	# load_machine("FL01")
+	
+	# sensor correlation calculation example
+	data = []
+	for machine in list_sensors:
+		if "debug" in machine: continue
+		find_pearson_correlations(machine, list_sensors[machine], data, 3, 0.85)
+	data.sort()
+	with open("pearson.csv", 'w', encoding="utf-8") as fout:
+		fout.write("Coefficient;machine;sensor1;sensor2;number of entries\n")
+		fout.write('\n'.join([';'.join([str(cell) for cell in line]) for line in data]))
+	
