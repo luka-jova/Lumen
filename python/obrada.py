@@ -189,15 +189,5 @@ def find_pearson_correlations(machine, sensors, desired_corr_list, max_corr_time
 		
 
 if __name__ == "__main__":
-	# load_machine("FL01")
-	
-	# sensor correlation calculation example
-	data = []
-	for machine in list_sensors:
-		if "debug" in machine: continue
-		find_pearson_correlations(machine, list_sensors[machine], data, 3, 0.85)
-	data.sort()
-	with open("pearson.csv", 'w', encoding="utf-8") as fout:
-		fout.write("Coefficient;machine;sensor1;sensor2;number of entries\n")
-		fout.write('\n'.join([';'.join([str(cell) for cell in line]) for line in data]))
+	load_machine("FL01")
 	
