@@ -4,6 +4,7 @@ import anomaly_detector as ad
 import numpy as np
 from numpy import inf
 import estimator
+from os import listdir
 
 ##temporarily
 import matplotlib.pyplot as plt
@@ -33,12 +34,31 @@ e - Estimator object that has all the configuration details:
 #importlib.reload(estimator); importlib.reload(main); importlib.reload(main.estimator); e=estimator.Estimator("FL01"); main.run(e, start = "2018-04-01", end="2019-05-01")
 
 def run(e, details = True, mode = "Terminal", start = 0.0, end = 0.0):
-	with PdfPages('diagnosis.pdf') as pdf:
+	if isinstance(start, str):
+		start = filter.to_timestamp(start)
+	if isinstance(end, str):
+		end = filter.to_timestamp(end)
+		
+	pdfs = ests = [it for it in listdir(".") if it.endswith(".pdf")]
+	filename = str(len(pdfs) + 1) + "_diagnosis_" + e.machine_name + filter.to_date_for_filename(start) + "-" + filter.to_date_for_filename(end) + ".pdf"
+	
+	###PROBA###
+	'''
+	plt.close("all")
+	
+	L = []
+	filter.filtered_data(L, e.machine_name, e.vel_sensor_list[ 0 ], start = start, end = end)
+	fig, axes = plt.subplots(nrows = 2, ncols = 3, tight_layout = True)
+	ax = axes[1][0]
+	vis.Plot(L, kind = "scatter", color="blue", s = 1, marker = "x", ax = ax, name = "bok")	
+	vis.Plot(L, kind = "line", feature = "rol-mean", color="red", ax = ax, name = "bok", window = "5d")	
+	plt.show(block = False)
+	return
+	'''
+	###ENDOF PROBA####
+	
+	with PdfPages(filename) as pdf:
 		plt.rc('text', usetex=True)
-		if isinstance(start, str):
-			start = filter.to_timestamp(start)
-		if isinstance(end, str):
-			end = filter.to_timestamp(end)
 		
 		fig, ax = plt.subplots(nrows = 1, ncols = 1)
 		ax.axis([0, 10, 0, 10])
@@ -57,7 +77,7 @@ def run(e, details = True, mode = "Terminal", start = 0.0, end = 0.0):
 			load_data(new_data, e.machine_name, e.acc_sensor_list, start = 0, end = inf)
 			e.new_data = new_data
 			out = e.category_diagnosis("a", details = details)
-			categorization_pdf('aa', e, out, start, end, pdf)
+			categorization_pdf('aa', e, out, start = 0, end = inf, pdf = pdf)
 			plt.close("all")
 			
 		if e.RUN_A_CATEGORIZATION and e.RUN_CATEGORIZATION_NEW_DATA:
@@ -75,7 +95,7 @@ def run(e, details = True, mode = "Terminal", start = 0.0, end = 0.0):
 			load_data(new_data, e.machine_name, e.vel_sensor_list, start = 0, end = inf)
 			e.new_data = new_data
 			out = e.category_diagnosis("v", details = details)
-			categorization_pdf('va', e, out, start, end, pdf)
+			categorization_pdf('va', e, out, start = 0, end = inf, pdf = pdf)
 			plt.close("all")
 			print(out)
 		
@@ -122,76 +142,83 @@ def run(e, details = True, mode = "Terminal", start = 0.0, end = 0.0):
 def no_data_figure(e, type, start, end):
 	print('No data')
 
-def categorization_figure(e, machine, sensor, out, type, start, end):
-	fig, (ax1, ax2) = plt.subplots(1, 2, tight_layout = True, figsize = (10, 5))
-
+def categorization_axes(ax1, ax2, e, machine, cur_sensor, out, data, type):
 	#fig.patch.set_visible(False)
-
-	title = r"\noindent Categorization check \newline start: " + filter.to_date(start) + ", end: " + filter.to_date(end) + r" \newline "
 	disp_machine = ' '.join(machine.split('_')[:])
-	disp_sensor	 = ' '.join(sensor.split('_')[:])
-	title += f"{disp_machine} - {disp_sensor}"
-	ax1.set_title(title, fontweight = 'bold', fontsize = 15)
-
+	disp_sensor	 = ' '.join(cur_sensor.split('_')[:2])
+	print(out)
 	uk = sum(out)
+	ax2.set_title
 	if uk == 0:
 		ax1.axis('off')
 		ax2.axis([0, 10, 0, 10])
+		ax2.set_title(disp_sensor, fontsize = 20)
 		ax2.text(5, 5, 'No data', va = 'center', ha = 'center', fontsize = 30)
-		return fig
+	else:
+		if len(data) == 0:
+			print("Error")
+			return
+		ax2.set_title(disp_sensor, fontsize = 20)
+		vis.Plot(data = data, kind = 'scatter', s = 1, color = 'blue', ax = ax2, repair = machine, name = f"{type[0]} / {data[0].unit}")
+		vis.Plot(data = data, feature = 'rol-mean', color = 'red', ax = ax2, name = disp_sensor)
+		ax1.axis([0, 10, 0, 10])
+		
+		LIST = e.vel_classification
+		if type[0] == 'a':
+			LIST = e.acc_classification
 
-	data = []
-	filter.filtered_data(data, machine, sensor, start = start, end = end)
-	vis.Plot(data = data, kind = 'scatter', s = 0.1, color = 'blue', ax = ax2, name = f'{disp_machine} {disp_sensor}', repair = machine)#machine + ' ' + sensor)
-	#vis.Plot(data = data, feature = 'rol-mean', color = 'white', ax = ax2, name = ' proba',legend = False)#machine + ' ' + sensor)
-	ax1.axis([0, 10, 0, 10])
+		colors = ['green', 'yellow', 'orange', 'red']
 
-	LIST = e.vel_classification
-	if type[0] == 'a':
-		LIST = e.acc_classification
+		text = r'\noindent '
+		for i, C in enumerate(LIST):
+			text += f'{C.class_name}: ${out[i]} / {uk} = {int(out[i]/uk*100)}\%$'
+			text += r' \newline '
 
-	colors = ['green', 'yellow', 'orange', 'red']
+		ind, category = e.classify(out, type[0])
 
-	text = r'\noindent '
-	for i, C in enumerate(LIST):
-		text += f'{C.class_name}: ${out[i]} / {uk}$'
-		text += r' \newline '
+		ax1.text(5, 5, text, ha = 'center', va = 'center', fontsize = 15)
+		ax1.text(5, 2, category.class_name, fontsize=10,  bbox={'facecolor': colors[ind], 'alpha': 0.5, 'pad': 10},
+			ha = "center", verticalalignment = "bottom")
 
-	ind, category = e.classify(out, type[0])
+		ymin, ymax = ax2.get_ylim()
+		offset = 1000
 
-	ax1.text(3, 5, text, ha = 'center', va = 'center', fontsize = 15)
-	color = 'green'
-	ax1.text(3, 2, category.class_name, fontsize=10,  bbox={'facecolor': colors[ind], 'alpha': 0.5, 'pad': 10},
-		ha = "center", verticalalignment = "bottom")
+		for i, C in enumerate(LIST):
+			lo = C.min_val
+			if i == 0:
+				lo -= offset
+			hi = C.max_val
+			lo = max(lo, ymin - offset)
+			hi = min(hi, ymax + offset)
 
-	ymin, ymax = ax2.get_ylim()
-	offset = 1000
+			if lo != hi:
+				ax2.axhspan(lo, hi, facecolor = colors[i], alpha=0.2)
 
-	for i, C in enumerate(LIST):
-		lo = C.min_val
-		if i == 0:
-			lo -= offset
-		hi = C.max_val
-		lo = max(lo, ymin - offset)
-		hi = min(hi, ymax + offset)
+		plt.xticks(rotation=45)
+		ax2.set_ylim(top = ymax, bottom = ymin)
+		ax1.axis('off')
 
-		if lo != hi:
-			ax2.axhspan(lo, hi, facecolor = colors[i], alpha=0.1)
-
-	plt.xticks(rotation=45)
-	ax2.set_ylim(top = ymax, bottom = ymin)
-	ax1.axis('off')
-
-	return fig
 
 def categorization_pdf(type, e, out, start, end, pdf):
-	machine = e.machine_name
 	sensor_list = e.vel_sensor_list
 	if type[0] == 'a':
 		sensor_list = e.acc_sensor_list
+	
+	stamp = "DODAJ TIMESTAMP"
+	fig, axes = plt.subplots(nrows = 2, ncols = 3, tight_layout = True, figsize = (15, 7))
+	title = r"\noindent Categorization check \newline start: " + stamp
+	fig.subplots_adjust(top=0.85)
 
-	for sensor in sensor_list:
-		pdf.savefig(categorization_figure(e, machine, sensor, out[sensor], type, start, end))
+	
+	cur_ax1 = axes[ 1 ][ 1 ]
+	cur_ax2 = axes[ 0 ][ 1 ]
+	cur_sensor = sensor_list[ 0 ]
+	data = []
+	filter.filtered_data(data, e.machine_name, cur_sensor, start = start, end = end)
+	categorization_axes(cur_ax1, cur_ax2, e, e.machine_name, cur_sensor, out[ cur_sensor ], data, type)	
+	fig.tight_layout()
+	fig.suptitle("dobar dan", fontsize=14, fontweight='bold')	
+	pdf.savefig(fig)
 
 
 ################>>>>>>>>>>>>>>>>>>>ENDOFKLEPEC

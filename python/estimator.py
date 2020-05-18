@@ -88,21 +88,15 @@ class Estimator:
 	
 	RUN_COMPATIBILITY_LAST_DAY = False 
 	#if new_data is in intervl [start, end], then referent_data will become [start - 24:00:00, end - 24:00:00]
-	RUN_COMPATIBILITY_LAST_WEEK = True
+	RUN_COMPATIBILITY_LAST_WEEK = False
 	#if new_data is in intervl [start, end], then referent_data will become [start - 24:00:00 * 7, end - 24:00:00 * 7]
-	RUN_COMPATIBILITY_LAST_N_DAYS = True
+	RUN_COMPATIBILITY_LAST_N_DAYS = False
 	REFERENT_LAST_N_DAYS = 100
 	#if new_data is in intervl [start, end], then referent_data will become [start - 24:00:00 * REFERENT_LAST_N_DAYS, end - 24:00:00 * REFERENT_LAST_N_DAYS]
 	
-	RUN_COMPATIBILITY_BEST_FIT = True
+	RUN_COMPATIBILITY_BEST_FIT = False
 	#Try fitting new_data to Gaussian distribution provided with (best_mu, best_sigma2)
 	
-	FIND_MIN_MEAN = True
-	MIN_MEAN_WINDOW = 14 
-	#Find minimum rolling mean value. Rolling mean has MIN_MEAN_WINDOW DAYS of window
-	
-	#
-		
 	'''
 	##########################
 	#END of DIAGNOSIS DETAILS#
@@ -182,7 +176,6 @@ class Estimator:
 			sensor_list = self.vel_sensor_list
 			meas_classification = self.vel_classification
 			
-		###TODO Plot data for each sensor with marked limits of the standard
 		cnt_categ = {}
 		
 		for cur_sensor in sensor_list:
@@ -192,60 +185,8 @@ class Estimator:
 
 			for cur_meas in self.new_data[ cur_sensor ]:
 				cnt_categ[ cur_sensor ][ self.classify(cur_meas, meas_type)[ 0 ] ] += 1
-		
-		for cur_sensor in sensor_list:
-			class_ind, cur_class = self.classify(cnt_categ[ cur_sensor ], meas_type)
-			'''
-			<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<remove this
-			if class_ind == -1 or len(self.new_data[ cur_sensor ]) == 0:
-				print("..", cur_sensor, ": ", sep = "", end="")
-				print("N/A")
-				if(details):
-					print("....no data")
-				else:
-					print()
-			else:
-				print("..", cur_sensor, ": ", sep="", end ="")
-				print(cur_class.class_name)
 				
-				if(details):
-					for ind, cnt in enumerate(cnt_categ[ cur_sensor ]):
-						print("....", meas_classification[ ind ].class_name, "/", "all: ", sep = "", end = "")
-						print(cnt, "/", len(self.new_data[ cur_sensor ]), " = ", cnt/len(self.new_data[ cur_sensor ]), sep = "")
-				>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-				'''
-		'''
-		#whole machine classification
-		cnt_categ_total = [0] * len(meas_classification)
-		cnt_categ_total_sum = 0
-		for cur_sensor in sensor_list:
-			for ind,cnt in enumerate(cnt_categ[cur_sensor]):
-				cnt_categ_total[ ind ] += cnt
-				cnt_categ_total_sum += cnt
-		print("Machine", self.machine_name, "is working:", self.classify(cnt_categ_total, meas_type)[ 1 ].class_name)
-		if(details):
-			for ind, cnt in enumerate(cnt_categ_total):
-				print("..", meas_classification[ ind ].class_name, "/", "all: ", sep = "", end = "")
-				print(cnt, "/", cnt_categ_total_sum, " = ", cnt/cnt_categ_total_sum, sep = "")
-		'''
 		return cnt_categ
-	
-	
-	
-	'''
-	display_data_info
-		REQUIRES
-		DESCRIPTION
-			If data is a numpy vector, displays it's mean, standard deviation and variance
-		EXAMPLE of usage:
-			
-	'''
-	def display_data_info(self, data, data_name, pref = "..."):
-		print(pref, "Info for ", data_name, sep = "")
-		mu, sigma2 = ad.estimateGaussian(data)
-		print(pref, ".mean: ", mu, sep = "")
-		print(pref, ".std d: ", np.sqrt(sigma2), sep = "")
-		print(pref, ".variance: ", sigma2, sep = "")
 	
 	
 	'''
@@ -326,29 +267,6 @@ class Estimator:
 			outlier_cnt = m_new_data - good_cnt
 			good_cnt_d[ cur_sensor ] = good_cnt
 			outlier_cnt_d[ cur_sensor ] = outlier_cnt
-			new_data_mu[ cur_sensor ], new_data_sigma2[ cur_sensor ] = ad.estimateGaussian(new_data_v)
-			'''
-			if outlier_cnt / m_new_data < 0.1: #10% tolerance
-				print("..FITTING to referent data good")
-			else:
-				print("..NOT FITTING to referent data")
-				all_good = False
-			if details:
-				print("..", good_cnt, "/", m_new_data, "=", good_cnt/m_new_data, " examples from new data FITS to referent data interval", sep = "")
-				print("..(This value should be greater than 90%)")
-				print(cur_sensor, "\n.referent data\n", "..mu: ", cur_mu, "\n..std.dev.: ", np.sqrt(cur_sigma2), "\n..variance: ", cur_sigma2, sep="")
-				self.display_data_info(new_data_v, "new_data")
-			'''	
-				
-			#TODO Plot distribution for referent_data and new_data on same graph for comparing	
-		#endfor
-		'''
-		if all_good:
-			print("[GOOD] All sensors for", self.machine_name, "FIT to referent data.")
-		else:
-			print("[WARNING] Some sensors for", self.machine_name, "DO NOT FIT to referent data.")
-			print("Consider consulting vibration analysis expert.")
-			#TODO Messages - sto treba raditi ako se povecava / smanjuje mean value, sto treba raditi ako se povecava variance
-		'''
+			new_data_mu[ cur_sensor ], new_data_sigma2[ cur_sensor ] = ad.estimateGaussian(new_data_v)	
 		return (mu, sigma2, new_data_mu, new_data_sigma2, good_cnt_d, outlier_cnt_d)
 		

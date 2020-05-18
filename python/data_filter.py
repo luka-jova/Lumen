@@ -6,6 +6,9 @@ import dataset_loader as dl
 def to_date(timestamp):
 	return dt.fromtimestamp(timestamp).strftime("%Y-%m-%d")
 
+def to_date_for_filename(timestamp):
+	return dt.fromtimestamp(timestamp).strftime("%d%m%y")
+
 def to_timestamp(s, is_interval = False):
 	if is_interval:
 		result = 0.
