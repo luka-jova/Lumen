@@ -1,6 +1,7 @@
 import visual_test as vis
 import data_filter as filter
 import anomaly_detector as ad
+from datetime import datetime as dt
 import numpy as np
 from numpy import inf
 import estimator
@@ -40,22 +41,7 @@ def run(e, details = True, mode = "Terminal", start = 0.0, end = 0.0):
 		end = filter.to_timestamp(end)
 		
 	pdfs = ests = [it for it in listdir(".") if it.endswith(".pdf")]
-	filename = str(len(pdfs) + 1) + "_diagnosis_" + e.machine_name + filter.to_date_for_filename(start) + "-" + filter.to_date_for_filename(end) + ".pdf"
-	
-	###PROBA###
-	'''
-	plt.close("all")
-	
-	L = []
-	filter.filtered_data(L, e.machine_name, e.vel_sensor_list[ 0 ], start = start, end = end)
-	fig, axes = plt.subplots(nrows = 2, ncols = 3, tight_layout = True)
-	ax = axes[1][0]
-	vis.Plot(L, kind = "scatter", color="blue", s = 1, marker = "x", ax = ax, name = "bok")	
-	vis.Plot(L, kind = "line", feature = "rol-mean", color="red", ax = ax, name = "bok", window = "5d")	
-	plt.show(block = False)
-	return
-	'''
-	###ENDOF PROBA####
+	filename = str(len(pdfs) + 1) + "_diagnosis_" + e.machine_name + "-" + filter.to_date_for_filename(start) + "-" + filter.to_date_for_filename(end) + ".pdf"
 	
 	with PdfPages(filename) as pdf:
 		plt.rc('text', usetex=True)
@@ -80,15 +66,6 @@ def run(e, details = True, mode = "Terminal", start = 0.0, end = 0.0):
 			categorization_pdf('aa', e, out, start = 0, end = inf, pdf = pdf)
 			plt.close("all")
 			
-		if e.RUN_A_CATEGORIZATION and e.RUN_CATEGORIZATION_NEW_DATA:
-			print("-------Categorization of acceleration for new data---------")
-			new_data = {}
-			load_data(new_data, e.machine_name, e.acc_sensor_list, start = start, end = end)
-			e.new_data = new_data
-			out = e.category_diagnosis("a", details = details)
-			categorization_pdf('an', e, out, start, end, pdf)
-			plt.close("all")
-			
 		if e.RUN_V_CATEGORIZATION and e.RUN_CATEGORIZATION_ALL_DATA:
 			print("-------Categorization of velocity for all data---------")
 			new_data = {}
@@ -97,7 +74,15 @@ def run(e, details = True, mode = "Terminal", start = 0.0, end = 0.0):
 			out = e.category_diagnosis("v", details = details)
 			categorization_pdf('va', e, out, start = 0, end = inf, pdf = pdf)
 			plt.close("all")
-			print(out)
+			
+		if e.RUN_A_CATEGORIZATION and e.RUN_CATEGORIZATION_NEW_DATA:
+			print("-------Categorization of acceleration for new data---------")
+			new_data = {}
+			load_data(new_data, e.machine_name, e.acc_sensor_list, start = start, end = end)
+			e.new_data = new_data
+			out = e.category_diagnosis("a", details = details)
+			categorization_pdf('an', e, out, start, end, pdf)
+			plt.close("all")
 		
 		if e.RUN_V_CATEGORIZATION and e.RUN_CATEGORIZATION_NEW_DATA:
 			print("-------Categorization of velocity for new data---------")
@@ -136,9 +121,25 @@ def run(e, details = True, mode = "Terminal", start = 0.0, end = 0.0):
 			e.referent_data = {}
 			compatibility_pdfgen(pdf, e, "from " + filter.to_date(start) + " until " + filter.to_date(end), " recommended distribution (from .config) ", use_best_data = True)
 
+def title_page(pdf, display_list):
+	fig, ax = plt.subplots(nrows = 1, ncols = 1)
+	ax.axis([0, 10, 0, 10])
+	
+	ax.set_yticklabels([])
+	ax.set_xticklabels([])
+	ax.xaxis.set_ticks_position('none')
+	ax.yaxis.set_ticks_position('none')
+	for ind, disp_s in enumerate(display_list):
+		if len(display_list) == 1:
+			fontsize = 30
+		elif ind == 0:
+			fontsize = 20
+		else:
+			fontsize = 10
+		ax.text(5, 5-ind, disp_s, ha = 'center', va = 'center', fontsize = fontsize)	
+	pdf.savefig(fig)
+	plt.close("all")
 
-
-###############<<<<<<<<<<<<<<<<<<KLEPEC
 def no_data_figure(e, type, start, end):
 	print('No data')
 
@@ -146,7 +147,6 @@ def categorization_axes(ax1, ax2, e, machine, cur_sensor, out, data, type):
 	#fig.patch.set_visible(False)
 	disp_machine = ' '.join(machine.split('_')[:])
 	disp_sensor	 = ' '.join(cur_sensor.split('_')[:2])
-	print(out)
 	uk = sum(out)
 	ax2.set_title
 	if uk == 0:
@@ -161,6 +161,7 @@ def categorization_axes(ax1, ax2, e, machine, cur_sensor, out, data, type):
 		ax2.set_title(disp_sensor, fontsize = 20)
 		vis.Plot(data = data, kind = 'scatter', s = 1, color = 'blue', ax = ax2, repair = machine, name = f"{type[0]} / {data[0].unit}")
 		vis.Plot(data = data, feature = 'rol-mean', color = 'red', ax = ax2, name = disp_sensor)
+		ax2.set_xlim([dt.fromtimestamp(data[0].start_timestamp), dt.fromtimestamp(data[-1].start_timestamp)])
 		ax1.axis([0, 10, 0, 10])
 		
 		LIST = e.vel_classification
@@ -171,13 +172,13 @@ def categorization_axes(ax1, ax2, e, machine, cur_sensor, out, data, type):
 
 		text = r'\noindent '
 		for i, C in enumerate(LIST):
-			text += f'{C.class_name}: ${out[i]} / {uk} = {int(out[i]/uk*100)}\%$'
+			text += f'{C.class_name}: ${out[i]} / {uk} = {int(round(out[i]/uk*100,0))}\%$'
 			text += r' \newline '
 
 		ind, category = e.classify(out, type[0])
 
 		ax1.text(5, 5, text, ha = 'center', va = 'center', fontsize = 15)
-		ax1.text(5, 2, category.class_name, fontsize=10,  bbox={'facecolor': colors[ind], 'alpha': 0.5, 'pad': 10},
+		ax1.text(5, 1, category.class_name, fontsize=15,  bbox={'facecolor': colors[ind], 'alpha': 0.5, 'pad': 10},
 			ha = "center", verticalalignment = "bottom")
 
 		ymin, ymax = ax2.get_ylim()
@@ -201,30 +202,31 @@ def categorization_axes(ax1, ax2, e, machine, cur_sensor, out, data, type):
 
 def categorization_pdf(type, e, out, start, end, pdf):
 	sensor_list = e.vel_sensor_list
+	title = r"Velocity sensors"
 	if type[0] == 'a':
 		sensor_list = e.acc_sensor_list
+		title = r"Acceleration sensors"
+	if start == 0:
+		stamp = "all data"
+	else:
+		stamp = f"from {filter.to_date(start)} to {filter.to_date(end)}"
 	
-	stamp = "DODAJ TIMESTAMP"
-	fig, axes = plt.subplots(nrows = 2, ncols = 3, tight_layout = True, figsize = (15, 7))
-	title = r"\noindent Categorization check \newline start: " + stamp
-	fig.subplots_adjust(top=0.85)
+	title_page(pdf, [r"Categorization of measurements", title, "Time interval: " + stamp])
 
-	
-	cur_ax1 = axes[ 1 ][ 1 ]
-	cur_ax2 = axes[ 0 ][ 1 ]
-	cur_sensor = sensor_list[ 0 ]
-	data = []
-	filter.filtered_data(data, e.machine_name, cur_sensor, start = start, end = end)
-	categorization_axes(cur_ax1, cur_ax2, e, e.machine_name, cur_sensor, out[ cur_sensor ], data, type)	
-	fig.tight_layout()
-	fig.suptitle("dobar dan", fontsize=14, fontweight='bold')	
-	pdf.savefig(fig)
-
-
-################>>>>>>>>>>>>>>>>>>>ENDOFKLEPEC
-
-
-
+	for sensor_block in [sensor_list[:3], sensor_list[3:]]:
+		plt.close("all")
+		fig, axes = plt.subplots(nrows = 2, ncols = 3, figsize = (15, 8))		
+		#TODO iz nekog razloga ne radi suptitle, tj tekst se preklapa sa naslovom grafa
+		axes[0][1].text(0.5, 1.15, title + " " + stamp, ha="center", va="bottom", transform = axes[0][1].transAxes, fontsize = 20)
+		#fig.suptitle("dobar dan", fontsize=14, fontweight='bold')			
+		for ind, cur_sensor in enumerate(sensor_block):
+			cur_ax1 = axes[ 1 ][ ind ]
+			cur_ax2 = axes[ 0 ][ ind ]
+			data = []
+			filter.filtered_data(data, e.machine_name, cur_sensor, start = start, end = end)
+			categorization_axes(cur_ax1, cur_ax2, e, e.machine_name, cur_sensor, out[ cur_sensor ], data, type)	
+		plt.tight_layout(w_pad=0.1)
+		pdf.savefig(fig)
 
 
 #estimator has to be loaded
@@ -232,18 +234,9 @@ def compatibility_pdfgen(pdf, e, new_data_stamp, referent_data_stamp, use_best_d
 	mu, sigma2, new_data_mu, new_data_sigma2, good_cnt_d, outlier_cnt_d = e.compatibility_diagnosis(details = True, use_best_data = use_best_data)
 	
 	###TITLE PAGE VELOCITY
-	fig, ax = plt.subplots(nrows = 1, ncols = 1)
-	ax.axis([0, 10, 0, 10])
 	
-	ax.set_yticklabels([])
-	ax.set_xticklabels([])
-	ax.xaxis.set_ticks_position('none')
-	ax.yaxis.set_ticks_position('none')
-	ax.text(5, 5, "Compatibility check for velocity sensors", ha = 'center', va = 'center', fontsize = 20)	
-	ax.text(5, 4, "New data:" + new_data_stamp, ha = 'center', va = 'center', fontsize=10)
-	ax.text(5, 3, "Referent data:" + referent_data_stamp, ha = 'center', va = 'center', fontsize=10)
-	pdf.savefig(fig)
-	plt.close("all")
+	title_page(pdf, ["Compatibility check for velocity sensors", "New data:" + new_data_stamp,
+		"Referent data:" + referent_data_stamp])
 		
 	###MEASUREMENTS
 	num_columns = len(e.vel_sensor_list)
@@ -305,19 +298,10 @@ def compatibility_pdfgen(pdf, e, new_data_stamp, referent_data_stamp, use_best_d
 	plt.close("all")
 	
 	###TITLE PAGE ACCELERATION
-	fig, ax = plt.subplots(nrows = 1, ncols = 1)
-	ax.axis([0, 10, 0, 10])
 	
-	ax.set_yticklabels([])
-	ax.set_xticklabels([])
-	ax.xaxis.set_ticks_position('none')
-	ax.yaxis.set_ticks_position('none')
-	ax.text(5, 5, "Compatibility check for acceleration sensors", ha = 'center', va = 'center', fontsize = 20)	
-	ax.text(5, 4, "New data: " + new_data_stamp, ha = 'center', va = 'center', fontsize=10)
-	ax.text(5, 3, "Referent data:" + referent_data_stamp, ha = 'center', va = 'center', fontsize=10)
-	pdf.savefig(fig)
-	plt.close("all")
-		
+	title_page(pdf, ["Compatibility check for acceleration sensors", "New data:" + new_data_stamp,
+		"Referent data:" + referent_data_stamp])
+
 	###MEASUREMENTS
 	num_columns = len(e.acc_sensor_list)
 	fig, axes = plt.subplots(nrows=1, ncols=num_columns, figsize = (num_columns * 2, 5))
@@ -403,7 +387,7 @@ def display_compatibility_data(ax, cur_sensor, mu_d, sigma2_d, new_data_mu_d, ne
 	if cur_sensor in good_cnt_d and cur_sensor in outlier_cnt_d:
 		disp_good_cnt = str(good_cnt_d[ cur_sensor ])
 		disp_all_cnt = str(good_cnt_d[ cur_sensor ] + outlier_cnt_d[ cur_sensor ])
-		percentage = int(good_cnt_d[ cur_sensor ] / (good_cnt_d[ cur_sensor ] + outlier_cnt_d[ cur_sensor ]) * 100)
+		percentage = int(round(good_cnt_d[ cur_sensor ] / (good_cnt_d[ cur_sensor ] + outlier_cnt_d[ cur_sensor ]) * 100,0))
 		disp_percentage = str(percentage) + "\%"
 	disp_status = ""
 	color = ""
@@ -441,98 +425,3 @@ def load_data(new_data, machine_name, sensor_list, start, end):
 	for cur_sensor in sensor_list:
 		new_data[ cur_sensor ] = []
 		filter.filtered_data(new_data[ cur_sensor ], machine_name, cur_sensor, start, None, end)
-
-
-################################################################################NEPOTREBNO KASNIJE
-CUR_MACHINE = "FL01"
-CUR_SENSOR = "drive_gear_V_eff"
-
-mu = 0
-Sigma2 = []
-epsilon = 0
-F1 = 0
-estimated = False
-
-'''
-Usage:
-call select() function to select which machine and sensor you are about to use
--displaying functions
--estimate function
-'''
-
-def select(machine_name = "", sensor = ""):
-	global CUR_MACHINE, CUR_SENSOR, mu, Sigma2, epsilon, F1, estimated, list_machines, list_sensors
-	if machine_name == "":
-		print("Select machine:")
-		for ind, name in enumerate(list_machines):
-			print("[", ind + 1, "] ", name, sep = "")
-		ind = int(input())
-		CUR_MACHINE = list_machines[ ind - 1 ]
-		print("Select sensor:")
-		for ind, name in enumerate(list_sensors[ CUR_MACHINE ]):
-			print("[", ind + 1, "] ", name, sep = "")
-		ind = int(input())
-		CUR_SENSOR = list_sensors[ CUR_MACHINE ][ ind - 1 ]
-	else:	
-		CUR_MACHINE = machine_name
-		CUR_SENSOR = sensor
-	mu = 0
-	Sigma2 = []
-	F1 = 0
-	estimated = False
-	print("Selected:", CUR_MACHINE, CUR_SENSOR)
-
-def dispSelectedInfo():
-	global CUR_MACHINE, CUR_SENSOR, mu, Sigma2, epsilon, F1, estimated
-	print("Selected ", CUR_MACHINE, CUR_SENSOR)	
-		
-def plotAllMeasurementsTimeline():
-	global CUR_MACHINE, CUR_SENSOR, mu, Sigma2, epsilon, F1, estimated
-	dispSelectedInfo()
-	vis.Plot(machine = CUR_MACHINE, sensors = [CUR_SENSOR])
-
-def plotMeasurementsDistribution(start = 0, duration = None, end = inf):
-	global CUR_MACHINE, CUR_SENSOR, mu, Sigma2, epsilon, F1, estimated
-	meas_list = []
-	dispSelectedInfo()
-	filter.filtered_data(meas_list, CUR_MACHINE, CUR_SENSOR, start, duration, end)
-	meas_v = filter.measurements_to_numpy_vector(meas_list)
-	vis.Plot(meas_v, kind = 'hist', bins = 100)
-
-
-###EXAMPLE FUNCTIONS
-def run_category_diagnosis():
-	print("Please select machine to be category diagnosed and sensor to be plotted")
-	select()
-	plotAllMeasurementsTimeline()
-	estim = estimator.Estimator(CUR_MACHINE)
-	new_data = {}
-	for cur_sensor in list_sensors[ CUR_MACHINE ]:
-		new_data[ cur_sensor ] = []
-		filter.filtered_data(new_data[ cur_sensor ], CUR_MACHINE, cur_sensor)
-	estim.new_data = new_data
-	estim.category_diagnosis("v")
-	estim.category_diagnosis("a")
-	
-def run_compatibility_diagnosis():
-	print("Please select machine to be compatibility diagnosed and sensor to be plotted")
-	select()
-	plotAllMeasurementsTimeline()
-	estim = estimator.Estimator(CUR_MACHINE)
-	new_data = {}
-	referent_data = {}
-	for cur_sensor in list_sensors[ CUR_MACHINE ]:
-		new_data[ cur_sensor ] = []
-		filter.filtered_data(new_data[ cur_sensor ], CUR_MACHINE, cur_sensor, start = "2019-03-15", end = "2019-04-01")
-		referent_data[ cur_sensor ] = []
-		filter.filtered_data(referent_data[ cur_sensor ], CUR_MACHINE, cur_sensor, start = "2019-06-01", end = "2019-07-01")
-		
-	vis.Plot(filter.measurements_to_numpy_vector(referent_data[ CUR_SENSOR ]), kind = "density")
-	vis.Plot(filter.measurements_to_numpy_vector(new_data[ CUR_SENSOR ]), kind = "density")
-	estim.new_data = new_data
-	estim.referent_data = referent_data
-	estim.compatibility_diagnosis(use_best_data = False)
-	
-if __name__ == "__main__":
-	#run_velocity_diagnosis()
-	run()

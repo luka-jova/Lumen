@@ -33,7 +33,6 @@ class Estimator:
 		RUN_A_CATEGORIZATION = True
 		RUN_CATEGORIZATION_NEW_DATA = True
 		RUN_CATEGORIZATION_ALL_DATA = True	
-		RUN_COMPATIBILITY_LAST_DAY = True 
 		RUN_COMPATIBILITY_LAST_WEEK = True
 		RUN_COMPATIBILITY_LAST_N_DAYS = True
 		RUN_COMPATIBILITY_BEST_FIT = True
@@ -65,15 +64,10 @@ class Estimator:
 	
 	##Choose range...
 	acc_classification = [
-		#Classification(class_name = "Good", min_val = 0, max_val = 1000, color = "g", unit = "mg"),
-		#Classification(class_name = "Satisfactory", min_val = 1000, max_val = 5000, color = "c", unit = "mg"),
-		#Classification(class_name = "Unsatisfactory", min_val = 5000, max_val = 10000, color = "y", unit = "mg"),
-		#Classification(class_name = "Unacceptable", min_val = 10000, max_val = inf, color = "r", unit = "mg")		
-	
-		Classification(class_name = "Good", min_val = 0, max_val = 500, color = "g", unit = "mg"),
-		Classification(class_name = "Satisfactory", min_val = 500, max_val = 1000, color = "c", unit = "mg"),
-		Classification(class_name = "Unsatisfactory", min_val = 1000, max_val = 10000, color = "y", unit = "mg"),
-		Classification(class_name = "Unacceptable", min_val = 10000, max_val = inf, color = "r", unit = "mg")		
+		Classification(class_name = "Good", min_val = 0, max_val = 5000, color = "g", unit = "mg"),
+		Classification(class_name = "Satisfactory", min_val = 5000, max_val = 10000, color = "c", unit = "mg"),
+		Classification(class_name = "Unsatisfactory", min_val = 10000, max_val = 20000, color = "y", unit = "mg"),
+		Classification(class_name = "Unacceptable", min_val = 20000, max_val = inf, color = "r", unit = "mg")		
 	]
 	
 	'''
@@ -88,13 +82,13 @@ class Estimator:
 	
 	RUN_COMPATIBILITY_LAST_DAY = False 
 	#if new_data is in intervl [start, end], then referent_data will become [start - 24:00:00, end - 24:00:00]
-	RUN_COMPATIBILITY_LAST_WEEK = False
+	RUN_COMPATIBILITY_LAST_WEEK = True
 	#if new_data is in intervl [start, end], then referent_data will become [start - 24:00:00 * 7, end - 24:00:00 * 7]
-	RUN_COMPATIBILITY_LAST_N_DAYS = False
+	RUN_COMPATIBILITY_LAST_N_DAYS = True
 	REFERENT_LAST_N_DAYS = 100
 	#if new_data is in intervl [start, end], then referent_data will become [start - 24:00:00 * REFERENT_LAST_N_DAYS, end - 24:00:00 * REFERENT_LAST_N_DAYS]
 	
-	RUN_COMPATIBILITY_BEST_FIT = False
+	RUN_COMPATIBILITY_BEST_FIT = True
 	#Try fitting new_data to Gaussian distribution provided with (best_mu, best_sigma2)
 	
 	'''
