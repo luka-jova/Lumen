@@ -120,6 +120,8 @@ def run(e, details = True, mode = "Terminal", start = 0.0, end = 0.0):
 			e.new_data = new_data
 			e.referent_data = {}
 			compatibility_pdfgen(pdf, e, "from " + filter.to_date(start) + " until " + filter.to_date(end), " recommended distribution (from .config) ", use_best_data = True)
+	
+	print("Diagnosis exported to " + filename)
 
 def title_page(pdf, display_list):
 	fig, ax = plt.subplots(nrows = 1, ncols = 1)

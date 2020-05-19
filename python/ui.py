@@ -113,13 +113,16 @@ def run_diagnosis_screen():
 				print("Please enter the name of config files' directory")
 				CONFIG_DIR_PATH = input(PROMPT)
 			ests = [it[:-len(ext) - 1] for it in listdir(CONFIG_DIR_PATH) if it.endswith(ext)]
+			if "default" in ests:
+				ests[ ests.index("default") ] = ests[ 0 ]
+				ests[ 0 ] = "default"
 		est = select("Please select estimator:", ests)
-		print("Settings for estimator", ests[est - 1])
+		#print("Settings for estimator", ests[est - 1])
 		if not CONFIG_DIR_PATH.endswith('/'): CONFIG_DIR_PATH += '/'
 		file_path = CONFIG_DIR_PATH + ests[est - 1] + '.' + ext
-		with open(file_path, 'r', encoding="utf-8") as config_file:
-			print(config_file.read())
-		config_confirmed = select("\nTake this estimator?", ["Yes", "No"]) == 1
+		#with open(file_path, 'r', encoding="utf-8") as config_file:
+		#	print(config_file.read())
+		config_confirmed = True
 	
 	# PRINT DETAILS PROMPT
 	verbose = select("Show details?", ["Yes, show details", "No"]) == 1
@@ -127,6 +130,9 @@ def run_diagnosis_screen():
 	# SELECTING MACHINE
 	machines = [it for it in df.list_machines if "debug" not in it]
 	machine = machines[select("Select machine:", machines) - 1]
+
+	# SELECTING INTERVAL	
+	start_ts_tmp, end_ts_tmp = input_time_interval(0)
 	
 	# LOADING MEASUREMENTS, FINDING THE LAST TIMESTAMP
 	print("Loading the measurements, please wait.")
@@ -146,9 +152,16 @@ def run_diagnosis_screen():
 	estimator = Estimator(machine)
 	vl.load_estimator(file_path, estimator)
 	
-	# SELECTING INTERVAL
-	start_ts, end_ts = input_time_interval(end_ts)
-	print(vars(estimator), start_ts, end_ts, export, verbose)
+	if start_ts_tmp == 0:
+		#all data selected
+		start_ts = 0
+	elif start_ts_tmp < 0:
+		#last n ... selected
+		start_ts = end_ts + start_ts_tmp
+	else:
+		#custom interval
+		start_ts, end_ts = start_ts_tmp, end_ts_tmp
+
 	main.run(estimator, verbose, export, start_ts, end_ts)
 
 def add_data_screen():

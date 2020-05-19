@@ -80,8 +80,6 @@ class Estimator:
 	RUN_CATEGORIZATION_NEW_DATA = True
 	RUN_CATEGORIZATION_ALL_DATA = True
 	
-	RUN_COMPATIBILITY_LAST_DAY = False 
-	#if new_data is in intervl [start, end], then referent_data will become [start - 24:00:00, end - 24:00:00]
 	RUN_COMPATIBILITY_LAST_WEEK = True
 	#if new_data is in intervl [start, end], then referent_data will become [start - 24:00:00 * 7, end - 24:00:00 * 7]
 	RUN_COMPATIBILITY_LAST_N_DAYS = True
@@ -239,17 +237,22 @@ class Estimator:
 		
 		all_good = True
 		for cur_sensor in self.vel_sensor_list + self.acc_sensor_list:
-			if cur_sensor not in mu or cur_sensor not in sigma2:
-				print("Skipping", cur_sensor)
-				continue
-			print("Diagnosing sensor", cur_sensor)
-			m_new_data = len(self.new_data[ cur_sensor ])
+			if cur_sensor in self.new_data:
+				m_new_data = len(self.new_data[ cur_sensor ])
+			else:
+				m_new_data = 0
+				
 			if m_new_data < 10:
 				if details:
 					print("..too low amount of data: new_data(", m_new_data, ")", sep="")
-				continue	
+				continue
 			new_data_v = filter.measurements_to_numpy_vector(self.new_data[ cur_sensor ])[:, None] #m*1
-			
+			new_data_mu[ cur_sensor ], new_data_sigma2[ cur_sensor ] = ad.estimateGaussian(new_data_v)		
+			if cur_sensor not in mu or cur_sensor not in sigma2:
+				print("Skipping compatibility check for", cur_sensor)
+				continue
+			print("Diagnosing sensor", cur_sensor)
+	
 			cur_mu = mu[ cur_sensor ]
 			cur_sigma2 = sigma2[ cur_sensor ]
 			
@@ -260,7 +263,6 @@ class Estimator:
 			good_cnt = sum(new_data_pred >= epsilon)
 			outlier_cnt = m_new_data - good_cnt
 			good_cnt_d[ cur_sensor ] = good_cnt
-			outlier_cnt_d[ cur_sensor ] = outlier_cnt
-			new_data_mu[ cur_sensor ], new_data_sigma2[ cur_sensor ] = ad.estimateGaussian(new_data_v)	
+			outlier_cnt_d[ cur_sensor ] = outlier_cnt	
 		return (mu, sigma2, new_data_mu, new_data_sigma2, good_cnt_d, outlier_cnt_d)
 		
