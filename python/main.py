@@ -227,6 +227,7 @@ def categorization_pdf(type, e, out, start, end, pdf):
 			data = []
 			filter.filtered_data(data, e.machine_name, cur_sensor, start = start, end = end)
 			categorization_axes(cur_ax1, cur_ax2, e, e.machine_name, cur_sensor, out[ cur_sensor ], data, type)	
+			cur_ax2.set_rasterization_zorder(0)
 		plt.tight_layout(w_pad=0.1)
 		pdf.savefig(fig)
 

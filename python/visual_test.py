@@ -229,7 +229,7 @@ def PlotTime(to_plot, rep, **kwargs):#show_repair = True, figure = None, name = 
 			args['x'] = data.columns[0]
 			args['y'] = data.columns[1]
 			data[data.columns[0]] = pd.to_datetime(data[data.columns[0]], format='%Y-%m-%d %H:%M:%S.%f')
-		ax = data.plot(**args)
+		ax = data.plot(**args, rasterized=True)
 		line = 'data.plot(**args)'
 		if fig:
 			M.addplot(fig, line, data, args)
